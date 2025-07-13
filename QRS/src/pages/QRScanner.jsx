@@ -2,7 +2,12 @@ import React, { useRef, useEffect, useState } from "react";
 import jsQR from "jsqr";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3000"); // adjust your backend URL/port
+const socket = io("https://prym-ims.onrender.com", {
+  transports: ["websocket"],
+});
+
+socket.on("connect", () => console.log("✅ Connected"));
+socket.on("connect_error", (err) => console.log("❌ Error:", err.message));
 
 const QRScanner = () => {
   const videoRef = useRef(null);
