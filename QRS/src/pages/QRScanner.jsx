@@ -89,6 +89,7 @@ const QRScanner = () => {
   const handleRetry = () => {
     setScanResult(null);
     setIsScanning(true);
+    scanFrame(); // restart scanning
   };
 
   if (!isMobile) {
