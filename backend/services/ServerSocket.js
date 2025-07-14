@@ -1,11 +1,13 @@
 // ServerSocket.js
 const { Server } = require('socket.io');
 
+const tempData = [];
+
 exports.ServerSocket = async (server) => {
     try {
         const io = new Server(server, {
             cors: {
-                origin: ["https://prym-ims.vercel.app", "http://localhost:5173"],
+                origin: ["https://prym-ims.vercel.app", "http://localhost:5173", "http://localhost:5174"],
                 methods: ["GET", "POST"]
             }
         });
@@ -14,10 +16,12 @@ exports.ServerSocket = async (server) => {
         io.on('connection', (socket) => {
             console.log('✅ New client connected:', socket.id);
 
+            socket.emit('initial-scan', tempData);
+
             // Listen for scanned QR data
             socket.on('qr-scan', (data) => {
                 console.log('📦 Received QR Code Data:', data);
-
+                tempData.push(data);
                 // Broadcast it to all connected clients
                 io.emit('qr-received', data);
             });
