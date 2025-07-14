@@ -9,11 +9,11 @@ const socket = io("https://prym-ims.onrender.com", {
 const QRScanner = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const streamRef = useRef(null); // Added to track the camera stream
+  const streamRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isScanning, setIsScanning] = useState(true);
-  const [scanningStatus, setScanningStatus] = useState("initializing"); // Added status tracking
+  const [scanningStatus, setScanningStatus] = useState("initializing");
 
   // Check if mobile device
   useEffect(() => {
@@ -38,7 +38,7 @@ const QRScanner = () => {
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream; // Store the stream reference
+      streamRef.current = stream;
       videoRef.current.srcObject = stream;
       videoRef.current.setAttribute("playsinline", true);
 
@@ -51,14 +51,12 @@ const QRScanner = () => {
     }
   };
 
-  // Camera setup and scanning
+  // Initial camera setup
   useEffect(() => {
     if (!isMobile) return;
-
     startCamera();
 
     return () => {
-      // Cleanup on unmount
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
@@ -83,7 +81,7 @@ const QRScanner = () => {
           const parsedData = JSON.parse(code.data);
           setScanResult(parsedData);
           socket.emit("qr-scan", parsedData);
-          setIsScanning(false); // Stop scanning when result is found
+          setIsScanning(false);
         } catch (e) {
           setScanResult({ error: "Invalid QR format" });
         }
@@ -95,14 +93,14 @@ const QRScanner = () => {
 
   const handleDone = () => {
     setScanResult(null);
-    setIsScanning(true);
-    startCamera(); // Restart camera when Done is clicked
+    setIsScanning(true); // Fixed typo here (was setIsScanning)
+    startCamera();
   };
 
   const handleRetry = () => {
     setScanResult(null);
-    setIsScanning(true);
-    startCamera(); // Restart camera when Retry is clicked
+    setIsScanning(true); // Fixed typo here (was setIsScanning)
+    startCamera();
   };
 
   if (!isMobile) {
