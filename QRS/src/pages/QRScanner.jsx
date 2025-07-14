@@ -23,10 +23,7 @@ const QRScanner = () => {
     );
   }, []);
 
-  // Camera setup and scanning
-  useEffect(() => {
-    if (!isMobile) return;
-
+  const startCamera = () => {
     const constraints = { video: { facingMode: "environment" } };
 
     navigator.mediaDevices
@@ -35,11 +32,19 @@ const QRScanner = () => {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", true);
         videoRef.current.play();
-        scanFrame(); // first time
+        setIsScanning(true);
+        scanFrame();
       })
       .catch((err) => {
         console.error("Camera error:", err);
       });
+  };
+
+  // Camera setup and scanning
+  useEffect(() => {
+    if (!isMobile) return;
+
+    startCamera();
 
     return () => {
       if (videoRef.current?.srcObject) {
@@ -82,14 +87,18 @@ const QRScanner = () => {
 
   const handleDone = () => {
     setScanResult(null);
-    setIsScanning(true);
-    scanFrame(); // restart scanning
+    if (videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+    }
+    startCamera(); // ✅ restart camera stream
   };
 
   const handleRetry = () => {
     setScanResult(null);
-    setIsScanning(true);
-    scanFrame(); // restart scanning
+    if (videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+    }
+    startCamera(); // ✅ restart camera stream
   };
 
   if (!isMobile) {
