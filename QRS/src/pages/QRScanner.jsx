@@ -26,9 +26,7 @@ const QRScanner = () => {
   useEffect(() => {
     if (!isMobile) return;
 
-    const constraints = {
-      video: { facingMode: "environment" },
-    };
+    const constraints = { video: { facingMode: "environment" } };
 
     navigator.mediaDevices
       .getUserMedia(constraints)
@@ -36,54 +34,55 @@ const QRScanner = () => {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", true);
         videoRef.current.play();
-        scanFrame();
+        scanFrame(); // first time
       })
       .catch((err) => {
         console.error("Camera error:", err);
       });
 
-    function scanFrame() {
-      if (!isScanning) return;
-
-      if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext("2d");
-        canvas.height = videoRef.current.videoHeight;
-        canvas.width = videoRef.current.videoWidth;
-        context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-        const imageData = context.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-        if (code && !scanResult) {
-          try {
-            const parsedData = JSON.parse(code.data);
-            setScanResult(parsedData);
-            socket.emit("qr-scan", parsedData);
-          } catch (e) {
-            setScanResult({ error: "Invalid QR format" });
-          }
-        }
-      }
-
-      requestAnimationFrame(scanFrame);
-    }
-
     return () => {
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
       }
+      cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [isScanning, isMobile]);
+  }, [isMobile]);
+
+  const scanFrame = () => {
+    if (!isScanning || !videoRef.current || !canvasRef.current) return;
+
+    if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      canvas.height = videoRef.current.videoHeight;
+      canvas.width = videoRef.current.videoWidth;
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+      if (code && !scanResult) {
+        try {
+          const parsedData = JSON.parse(code.data);
+          setScanResult(parsedData);
+          setIsScanning(false); // stop loop
+          socket.emit("qr-scan", parsedData);
+          return;
+        } catch (e) {
+          setScanResult({ error: "Invalid QR format" });
+          setIsScanning(false);
+          return;
+        }
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(scanFrame);
+  };
 
   const handleDone = () => {
     setScanResult(null);
     setIsScanning(true);
+    scanFrame(); // restart scanning
   };
 
   const handleRetry = () => {
