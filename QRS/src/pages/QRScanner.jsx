@@ -13,9 +13,8 @@ const QRScanner = () => {
   const animationFrameRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [isScanning, setIsScanning] = useState(true);
 
-  // Check if mobile device
+  // Detect if it's a mobile device
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     setIsMobile(
@@ -23,6 +22,7 @@ const QRScanner = () => {
     );
   }, []);
 
+  // Start camera
   const startCamera = () => {
     const constraints = { video: { facingMode: "environment" } };
 
@@ -32,51 +32,40 @@ const QRScanner = () => {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", true);
         videoRef.current.play();
-        setIsScanning(true);
-        scanFrame();
+        requestAnimationFrame(scanFrame);
       })
       .catch((err) => {
         console.error("Camera error:", err);
       });
   };
 
-  // Camera setup and scanning
-  useEffect(() => {
-    if (!isMobile) return;
-
-    startCamera();
-
-    return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      }
-      cancelAnimationFrame(animationFrameRef.current);
-    };
-  }, [isMobile]);
-
+  // Scan frame
   const scanFrame = () => {
-    if (!isScanning || !videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current) return;
 
-    if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-      const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.height = video.videoHeight;
+      canvas.width = video.videoWidth;
+
       const context = canvas.getContext("2d");
-      canvas.height = videoRef.current.videoHeight;
-      canvas.width = videoRef.current.videoWidth;
-      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-      if (code && !scanResult) {
+      if (code) {
         try {
           const parsedData = JSON.parse(code.data);
           setScanResult(parsedData);
-          setIsScanning(false); // stop loop
           socket.emit("qr-scan", parsedData);
+          stopCamera();
           return;
         } catch (e) {
           setScanResult({ error: "Invalid QR format" });
-          setIsScanning(false);
+          stopCamera();
           return;
         }
       }
@@ -85,21 +74,28 @@ const QRScanner = () => {
     animationFrameRef.current = requestAnimationFrame(scanFrame);
   };
 
-  const handleDone = () => {
-    setScanResult(null);
+  const stopCamera = () => {
     if (videoRef.current?.srcObject) {
       videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
     }
-    startCamera(); // ✅ restart camera stream
+    cancelAnimationFrame(animationFrameRef.current);
   };
 
-  const handleRetry = () => {
+  const restartScan = () => {
     setScanResult(null);
-    if (videoRef.current?.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-    }
-    startCamera(); // ✅ restart camera stream
+    stopCamera();
+    startCamera();
   };
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    startCamera();
+
+    return () => {
+      stopCamera();
+    };
+  }, [isMobile]);
 
   if (!isMobile) {
     return (
@@ -118,14 +114,12 @@ const QRScanner = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
-      {/* Header */}
       <header className="bg-gray-800 p-4 text-center">
         <h1 className="text-xl font-bold">Inventory Scanner</h1>
       </header>
 
-      {/* Scanner Area */}
       <main className="flex-1 flex flex-col items-center p-4">
-        {isScanning && !scanResult && (
+        {!scanResult && (
           <div className="relative w-full max-w-md mb-4">
             <video
               ref={videoRef}
@@ -139,7 +133,7 @@ const QRScanner = () => {
           </div>
         )}
 
-        {/* Scan Result */}
+        {/* Scan result */}
         {scanResult && (
           <div className="bg-gray-800 rounded-lg p-4 w-full max-w-md mb-4">
             <div className="flex items-center justify-center mb-3">
@@ -179,32 +173,18 @@ const QRScanner = () => {
             )}
 
             <button
-              onClick={handleDone}
+              onClick={restartScan}
               className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition"
             >
               Done - Scan Next
             </button>
           </div>
         )}
-
-        {/* Actions */}
-        <div className="flex space-x-2 mt-4">
-          {scanResult && (
-            <button
-              onClick={handleRetry}
-              className="flex items-center bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition"
-            >
-              <RotateCw className="mr-2 h-4 w-4" />
-              Retry
-            </button>
-          )}
-        </div>
       </main>
 
-      {/* Hidden canvas */}
+      {/* Hidden Canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Footer */}
       <footer className="bg-gray-800 p-3 text-center text-sm text-gray-400">
         Point camera at QR code to scan
       </footer>
