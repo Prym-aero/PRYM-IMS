@@ -10,6 +10,7 @@ const socket = io("https://prym-ims.onrender.com", {
 const QRScanner = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const animationFrameRef = useRef(null);
   const [scanResult, setScanResult] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isScanning, setIsScanning] = useState(true);
