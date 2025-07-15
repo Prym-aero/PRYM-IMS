@@ -23,7 +23,16 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const ERPQRScanner = () => {
-  const [scannedData, setScannedData] = useState([]);
+  const [scannedData, setScannedData] = useState([
+    {
+      id: 1,
+      qrId: "MOTOR-001",
+      part_number: "MTX500",
+      timestamp: "2023-07-14 10:15:22",
+      status: "Success",
+      scannedBy: "Scanner #1",
+    },
+  ]);
 
   const [isSessionStarted, setIsSessionStarted] = useState(false);
 
@@ -90,7 +99,7 @@ const ERPQRScanner = () => {
           id: data.id,
           part_name: data.part_name,
           part_number: data.part_number,
-          status: "Inventory",
+          status: "in-stock",
           date: data.date,
         }
       );
@@ -104,6 +113,11 @@ const ERPQRScanner = () => {
   };
 
   const handleAddScannedData = async (data) => {
+    if (!isSessionStarted) {
+      console.log("session not started - ignoring the scan");
+      return null;
+    }
+    
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",
