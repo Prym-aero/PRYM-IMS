@@ -5,6 +5,7 @@ import { Download } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const QRCodeGenerator = () => {
   const [partForm, setPartForm] = useState({
@@ -23,7 +24,7 @@ const QRCodeGenerator = () => {
   // 🔁 Fetch all parts from backend
   const fetchParts = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/ERP/part");
+      const res = await axios.get(`${API_URL}/api/ERP/part`);
       setPartsList(res.data.parts);
     } catch (err) {
       console.error("Failed to fetch parts:", err);
@@ -47,7 +48,7 @@ const QRCodeGenerator = () => {
     }
 
     try {
-      await axios.post("http://localhost:3000/api/ERP/part", partForm);
+      await axios.post(`${API_URL}/api/ERP/part`, partForm);
       alert("Part added successfully!");
       setPartForm({ part_name: "", part_number: "" });
       fetchParts();
@@ -282,7 +283,6 @@ const QRCodeGenerator = () => {
               width: "210mm",
               padding: "10px",
               boxSizing: "border-box",
-             
             }}
           >
             {qrCodes.map((item) => (

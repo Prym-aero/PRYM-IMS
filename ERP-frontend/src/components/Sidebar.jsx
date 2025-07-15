@@ -1,12 +1,12 @@
 import React from "react";
-import { 
-  LayoutDashboard, 
-  QrCode, 
-  ScanLine, 
-  Package, 
-  Settings, 
+import {
+  LayoutDashboard,
+  QrCode,
+  ScanLine,
+  Package,
+  Settings,
   LogOut,
-  HelpCircle 
+  HelpCircle,
 } from "lucide-react";
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
@@ -53,12 +53,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </div>
 
       {/* Help Button */}
-      <div className="p-4">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full flex items-center justify-center w-full">
-          <HelpCircle className="mr-2 h-4 w-4" />
-          Help
-        </button>
-      </div>
     </div>
   );
 };

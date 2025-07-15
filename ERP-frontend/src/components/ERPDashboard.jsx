@@ -12,17 +12,34 @@ import {
   Plus,
   CheckCircle,
 } from "lucide-react";
+import { useEffect } from "react";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const ERPMDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [parts, setParts] = useState([]);
+  const [lastPart, setLastPart] = useState({});
 
-  const menuItems = [
-    { icon: <Package className="w-5 h-5" />, label: "Dashboard", active: true },
-    { icon: <QrCode className="w-5 h-5" />, label: "Generate QR" },
-    { icon: <Scan className="w-5 h-5" />, label: "Scan QR" },
-    { icon: <Archive className="w-5 h-5" />, label: "Inventory" },
-    { icon: <Settings className="w-5 h-5" />, label: "Admin Panel" },
-  ];
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/ERP/part`);
+
+        if (res.status === 200) {
+          const fetchedParts = res.data.parts;
+          setParts(fetchedParts);
+          console.log("Fetched parts from API:", fetchedParts);
+          setLastPart(fetchedParts[fetchedParts.length - 1]);
+        }
+      } catch (err) {
+        console.error("Error fetching parts:", err);
+      }
+    };
+
+    fetchInventory();
+  }, []);
 
   const inventoryData = [
     {
@@ -67,6 +84,64 @@ const ERPMDashboard = () => {
     },
   ];
 
+  // State variables
+
+  const [partsPerPage] = useState(5); // You can change this number
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter parts based on search term
+  const filteredParts = parts.filter(
+    (part) =>
+      part.part_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      part.part_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      part.organization.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Get current parts
+  const indexOfLastPart = currentPage * partsPerPage;
+  const indexOfFirstPart = indexOfLastPart - partsPerPage;
+  const currentParts = filteredParts.slice(indexOfFirstPart, indexOfLastPart);
+
+  // Change page
+  const paginate = (pageNumber) => {
+    if (
+      pageNumber > 0 &&
+      pageNumber <= Math.ceil(filteredParts.length / partsPerPage)
+    ) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Calculate page numbers
+  const pageNumbers = [];
+  for (let i = 1; i <= Math.ceil(filteredParts.length / partsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
+  // Limit the number of visible page buttons (optional)
+  const maxVisiblePages = 5;
+  const getVisiblePageNumbers = () => {
+    if (pageNumbers.length <= maxVisiblePages) {
+      return pageNumbers;
+    }
+
+    const half = Math.floor(maxVisiblePages / 2);
+    let start = currentPage - half;
+    let end = currentPage + half;
+
+    if (start < 1) {
+      start = 1;
+      end = maxVisiblePages;
+    }
+
+    if (end > pageNumbers.length) {
+      end = pageNumbers.length;
+      start = end - maxVisiblePages + 1;
+    }
+
+    return pageNumbers.slice(start - 1, end);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "In Stock":
@@ -105,7 +180,9 @@ const ERPMDashboard = () => {
                   <p className="text-sm text-gray-600 mb-1">
                     Total Unique Parts
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">100</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {parts.length}
+                  </p>
                   <p className="text-xs text-green-600 mt-1">
                     ↗ 12% from last month
                   </p>
@@ -123,7 +200,12 @@ const ERPMDashboard = () => {
                   <p className="text-sm text-gray-600 mb-1">
                     Total Parts in Stock
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">450</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {parts.reduce(
+                      (acc, part) => acc + (part.inventory?.length || 0),
+                      0
+                    )}
+                  </p>
                   <p className="text-xs text-green-600 mt-1">
                     ↗ 8% from last month
                   </p>
@@ -159,11 +241,19 @@ const ERPMDashboard = () => {
                   <p className="text-sm text-gray-600 mb-1">
                     Latest Part Added
                   </p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    Propeller
+                  <p className="text-[22px] font-semibold text-gray-900">
+                    {lastPart.part_name}
                   </p>
-                  <p className="text-xs text-gray-500">PRT002</p>
-                  <p className="text-xs text-gray-500 mt-1">📅 2025-07-12</p>
+                  <p className="text-xs text-gray-500">
+                    {lastPart.part_number}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(lastPart.date).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                   <Clock className="w-6 h-6 text-yellow-600" />
@@ -184,6 +274,7 @@ const ERPMDashboard = () => {
                   type="text"
                   placeholder="Search parts..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
@@ -193,13 +284,13 @@ const ERPMDashboard = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Part ID
+                      Organization
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Part Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Model No.
+                      Part Number.
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Quantity
@@ -213,31 +304,33 @@ const ERPMDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {inventoryData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                  {currentParts.map((item) => (
+                    <tr key={item._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.id}
+                        {item.organization}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
-                        {item.name}
+                        {item.part_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.model}
+                        {item.part_number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.quantity}
+                        {item.inventory.length}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                            item.status
-                          )}`}
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800`}
                         >
-                          {item.status}
+                          {item.status || "Inventory"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.date}
+                        {new Date(item.date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -248,22 +341,46 @@ const ERPMDashboard = () => {
             {/* Pagination */}
             <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
               <div className="text-sm text-gray-700">
-                Showing 1 to 5 of 25 results
+                Showing {indexOfFirstPart + 1} to{" "}
+                {Math.min(indexOfLastPart, filteredParts.length)} of{" "}
+                {filteredParts.length} results
               </div>
               <div className="flex space-x-2">
-                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 text-sm ${
+                    currentPage === 1
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
                   Previous
                 </button>
-                <button className="px-3 py-1 text-sm bg-blue-500 text-white rounded">
-                  1
-                </button>
-                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
-                  2
-                </button>
-                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
-                  3
-                </button>
-                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
+
+                {pageNumbers.map((number) => (
+                  <button
+                    key={number}
+                    onClick={() => paginate(number)}
+                    className={`px-3 py-1 text-sm ${
+                      currentPage === number
+                        ? "bg-blue-500 text-white rounded"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === pageNumbers.length}
+                  className={`px-3 py-1 text-sm ${
+                    currentPage === pageNumbers.length
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
                   Next
                 </button>
               </div>
@@ -306,8 +423,6 @@ const ERPMDashboard = () => {
               </div>
             </div>
           </div>
-
-         
         </div>
       </div>
     </div>
