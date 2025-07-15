@@ -117,7 +117,7 @@ const ERPQRScanner = () => {
       console.log("session not started - ignoring the scan");
       return null;
     }
-    
+
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",

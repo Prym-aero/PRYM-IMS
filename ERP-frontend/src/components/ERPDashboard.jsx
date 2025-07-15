@@ -235,6 +235,7 @@ const ERPMDashboard = () => {
             </div>
 
             {/* Latest Part Added */}
+            {/* Latest Part Added */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -242,17 +243,19 @@ const ERPMDashboard = () => {
                     Latest Part Added
                   </p>
                   <p className="text-[22px] font-semibold text-gray-900">
-                    {lastPart.part_name}
+                    {lastPart?.part_name || "N/A"}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {lastPart.part_number}
+                    {lastPart?.part_number || "N/A"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {new Date(lastPart.date).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    {lastPart?.date
+                      ? new Date(lastPart.date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "N/A"}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
