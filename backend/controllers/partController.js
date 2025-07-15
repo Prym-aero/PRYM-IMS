@@ -2,7 +2,7 @@ const Part = require('../models/produtPart'); // ✅ Make sure filename is corre
 
 exports.AddPart = async (req, res) => {
     try {
-        const {  part_name, part_number } = req.body;
+        const { part_name, part_number } = req.body;
 
         if (!part_name || !part_number) {
             return res.status(400).json({ message: "Part info not found" });
@@ -14,10 +14,8 @@ exports.AddPart = async (req, res) => {
         }
 
         const part = new Part({
-            
             part_name,
             part_number,
-
         });
 
         await part.save();
@@ -46,3 +44,59 @@ exports.getParts = async (req, res) => {
         res.status(500).json({ message: "internal server error", err });
     }
 }
+
+
+exports.addToInventory = async (req, res) => {
+    const { partNumber } = req.params;
+    const { id, part_name, date, status } = req.body;
+
+    try {
+        const part = await Part.findOne({ part_number: partNumber });
+
+        if (!part) {
+            return res.status(404).json({ message: 'Part not found' });
+        }
+
+        part.inventory.push({
+            id,
+            part_name,
+            part_number: partNumber,
+            date: date || new Date(),
+            status,
+        });
+
+        await part.save();
+
+        res.json({ message: 'Inventory item added', part });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+
+exports.getInventoryStats = async (req, res) => {
+    try {
+        const parts = await Part.find({});
+
+        let inStockCount = 0;
+        let usedCount = 0;
+
+        parts.forEach((part) => {
+            part.inventory.forEach((inv) => {
+                if (inv.status === "in-stock") inStockCount++;
+                else if (inv.status === "used") usedCount++;
+            });
+        });
+
+        res.json({
+            totalInStock: inStockCount,
+            totalUsed: usedCount
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: "Something went wrong" });
+    }
+};
+
+

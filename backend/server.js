@@ -24,6 +24,11 @@ app.get('/', (req, res) => {
     res.send('Welcome to ERP Server..');
 })
 
+app.get('/ping', (req, res) => {
+    res.status(200).send('pong');
+});
+
+
 app.use('/api/ERP', partRoutes);
 app.use('/api/ERP', productRoutes);
 
