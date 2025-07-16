@@ -22,3 +22,19 @@ exports.addProduct = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error", error: err });
     }
 };
+
+exports.getProcuts = async (req, res) => {
+    try {
+        const products = await Product.find();
+
+        if (products.length < 1) {
+            return res.status(404).json({ message: "there are no procuts " });
+        }
+
+        res.status(200).json({ message: "products fetch successfully", products });
+
+    } catch (err) {
+        console.log("the error in fetching products is", err);
+        res.status(500).json({ message: "Internal server error", err });
+    }
+}

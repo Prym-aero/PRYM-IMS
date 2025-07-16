@@ -13,6 +13,7 @@ ServerSocket(server);
 
 const partRoutes = require('./routes/partRoute')
 const productRoutes = require('./routes/productRoute');
+const userRoutes = require('./routes/userRoute');
 
 
 app.use(cors());
@@ -32,6 +33,7 @@ app.get('/ping', (req, res) => {
 
 app.use('/api/ERP', partRoutes);
 app.use('/api/ERP', productRoutes);
+app.use('/api/ERP', userRoutes);
 
 
 

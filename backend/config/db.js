@@ -5,7 +5,7 @@ const MONGO_URL = process.env.MONGO_URL;
 
 mongoose.connect(MONGO_URL)
     .then(() => {
-        console.log("ERP database connected successfully");
+        console.log("PYRM-IMS database connected successfully");
     })
     .catch((err) => {
         console.log("errro in connnecting to the database", err);

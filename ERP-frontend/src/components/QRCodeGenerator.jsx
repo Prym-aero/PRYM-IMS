@@ -19,6 +19,16 @@ const QRCodeGenerator = () => {
   const [qrCodes, setQrCodes] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [productForm, setProductForm] = useState({
+    product_name: "",
+    parts: [{ part_name: "", quantity: 1 }],
+  });
+
+  const [productsList, setProductsList] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [selectedProductData, setSelectedProductData] = useState(null);
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+
   const itemsPerPage = 8;
 
   // 🔁 Fetch all parts from backend
@@ -33,6 +43,19 @@ const QRCodeGenerator = () => {
 
   useEffect(() => {
     fetchParts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/ERP/product`);
+      setProductsList(res.data.products);
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, []);
 
   const handlePartChange = (e) => {
@@ -54,6 +77,22 @@ const QRCodeGenerator = () => {
       fetchParts();
     } catch (err) {
       alert("Failed to add part.");
+    }
+  };
+
+  const addNewProduct = async () => {
+    try {
+      await axios.post(`${API_URL}/api/ERP/product`, productForm);
+      alert("Product added successfully!");
+      setProductForm({
+        product_name: "",
+        parts: [{ part_name: "", quantity: 1 }],
+      });
+      fetchProducts();
+      setIsAddingProduct(false);
+    } catch (err) {
+      console.error("Product creation failed", err);
+      alert("Error adding product");
     }
   };
 
@@ -179,6 +218,140 @@ const QRCodeGenerator = () => {
         >
           Add Part
         </button>
+      </div>
+
+      <div className="bg-white p-6 rounded shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4 text-gray-700">
+          Product Manager
+        </h2>
+
+        <div className="flex gap-4 mb-4">
+          <button
+            className={`px-4 py-2 rounded ${
+              isAddingProduct ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
+            onClick={() => {
+              setIsAddingProduct(true);
+              setSelectedProductId("");
+              setSelectedProductData(null);
+            }}
+          >
+            ➕ Add New Product
+          </button>
+          <button
+            className={`px-4 py-2 rounded ${
+              !isAddingProduct ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
+            onClick={() => {
+              setIsAddingProduct(false);
+              setProductForm({
+                product_name: "",
+                parts: [{ part_name: "", quantity: 1 }],
+              });
+            }}
+          >
+            📦 Select Existing Product
+          </button>
+        </div>
+
+        {isAddingProduct ? (
+          <>
+            <input
+              className="border p-2 rounded w-full mb-2"
+              placeholder="Product Name"
+              value={productForm.product_name}
+              onChange={(e) =>
+                setProductForm({ ...productForm, product_name: e.target.value })
+              }
+            />
+
+            {productForm.parts.map((p, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <select
+                  className="border p-2 rounded w-1/2"
+                  value={p.part_name}
+                  onChange={(e) => {
+                    const updated = [...productForm.parts];
+                    updated[index].part_name = e.target.value;
+                    setProductForm({ ...productForm, parts: updated });
+                  }}
+                >
+                  <option value="">-- Select Part --</option>
+                  {partsList.map((part) => (
+                    <option key={part._id} value={part.part_name}>
+                      {part.part_name} ({part.part_number})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min={1}
+                  className="border p-2 rounded w-1/2"
+                  placeholder="Quantity"
+                  value={p.quantity}
+                  onChange={(e) => {
+                    const updated = [...productForm.parts];
+                    updated[index].quantity = parseInt(e.target.value);
+                    setProductForm({ ...productForm, parts: updated });
+                  }}
+                />
+              </div>
+            ))}
+
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded mr-2"
+              onClick={() =>
+                setProductForm({
+                  ...productForm,
+                  parts: [...productForm.parts, { part_name: "", quantity: 1 }],
+                })
+              }
+            >
+              ➕ Add More Part
+            </button>
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded mt-2"
+              onClick={addNewProduct}
+            >
+              ✅ Save Product
+            </button>
+          </>
+        ) : (
+          <>
+            <select
+              className="border p-2 rounded w-full"
+              value={selectedProductId}
+              onChange={(e) => {
+                const pid = e.target.value;
+                setSelectedProductId(pid);
+                const found = productsList.find((prod) => prod._id === pid);
+                setSelectedProductData(found);
+              }}
+            >
+              <option value="">-- Select Product --</option>
+              {productsList.map((prod) => (
+                <option key={prod._id} value={prod._id}>
+                  {prod.product_name}
+                </option>
+              ))}
+            </select>
+
+            {selectedProductData && (
+              <div className="mt-4 border p-4 rounded bg-gray-50">
+                <h3 className="text-lg font-bold mb-2">
+                  {selectedProductData.product_name}
+                </h3>
+                <ul className="list-disc list-inside">
+                  {selectedProductData.parts.map((p, i) => (
+                    <li key={i}>
+                      {p.part_name} - Quantity: {p.quantity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* QR Generation Section */}

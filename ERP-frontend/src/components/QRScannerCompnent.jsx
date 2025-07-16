@@ -23,30 +23,21 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const ERPQRScanner = () => {
-  const [scannedData, setScannedData] = useState([
-    {
-      id: 1,
-      qrId: "MOTOR-001",
-      part_number: "MTX500",
-      timestamp: "2023-07-14 10:15:22",
-      status: "Success",
-      scannedBy: "Scanner #1",
-    },
-  ]);
+  const [scannedData, setScannedData] = useState([]);
 
   const [isSessionStarted, setIsSessionStarted] = useState(false);
 
   const [sessionData, setSessionData] = useState({
     sessionId: "SESSION-172AD",
     startedAt: "July 14, 2023 - 10:15 AM",
-    scannedCount: 12,
-    totalExpected: 25,
-    remaining: 13,
-    progress: 48,
-    partName: "Motor",
-    part_number: "MTX500",
+    scannedCount: 0,
+    totalExpected: 0,
+    remaining: 0,
+    progress: 0,
+    partName: "",
+    part_number: "",
     purpose: "Dispatch",
-    operationDate: "07/14/2023",
+    operationDate: "7/15/2025",
     operatorName: "",
   });
 
@@ -113,11 +104,6 @@ const ERPQRScanner = () => {
   };
 
   const handleAddScannedData = async (data) => {
-    if (!isSessionStarted) {
-      console.log("session not started - ignoring the scan");
-      return null;
-    }
-
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",
@@ -352,6 +338,7 @@ const ERPQRScanner = () => {
                       operationDate: formattedDate,
                     }));
                     setIsSessionStarted(true);
+                    console.log("session is ", isSessionStarted);
                   }}
                   className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
                 >
@@ -446,7 +433,7 @@ const ERPQRScanner = () => {
                     className="w-full p-2 border rounded-lg"
                   />
 
-                  <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" />
+                  {/* <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" /> */}
                 </div>
               </div>
               <div>
