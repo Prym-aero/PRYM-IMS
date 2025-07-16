@@ -12,8 +12,8 @@ dist
 dist-ssr
 *.local
 .env
-/seedUser.json
-seedUser.json
+/seedUser.js
+seedUser.js
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
