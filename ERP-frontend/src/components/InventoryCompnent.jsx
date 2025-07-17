@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -13,6 +13,8 @@ import {
   Truck,
   Printer,
 } from "lucide-react";
+import axios from "axios";
+const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const InventoryDispatchSystem = () => {
   const [showDispatchModal, setShowDispatchModal] = useState(false);
@@ -21,6 +23,7 @@ const InventoryDispatchSystem = () => {
     { id: 1, materialName: "", description: "", quantity: "", remarks: "" },
     { id: 2, materialName: "", description: "", quantity: "", remarks: "" },
   ]);
+  const [parts, setParts] = useState([]);
 
   const inventoryData = [
     {
@@ -75,6 +78,35 @@ const InventoryDispatchSystem = () => {
     },
   ];
 
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/ERP/part`);
+
+        if (res.status === 200) {
+          const fetchedParts = res.data.parts;
+          setParts(fetchedParts);
+          console.log(fetchedParts);
+        }
+      } catch (err) {
+        console.error("Error fetching parts:", err);
+      }
+    };
+
+    fetchInventory();
+  }, []);
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredParts = parts.filter(
+    (part) =>
+      part.part_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      part.part_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      part.organization.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const addDispatchRow = () => {
     const newRow = {
       id: Date.now(),
@@ -125,6 +157,8 @@ const InventoryDispatchSystem = () => {
           </div>
         </div>
 
+        
+
         {/* Filters and Controls */}
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex justify-between items-center">
@@ -135,6 +169,7 @@ const InventoryDispatchSystem = () => {
                   type="text"
                   placeholder="Search inventory..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-80"
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
@@ -183,41 +218,63 @@ const InventoryDispatchSystem = () => {
                 <th className="text-left p-4 font-medium text-gray-900">
                   Quantity
                 </th>
-                <th className="text-left p-4 font-medium text-gray-900">
+                {/* <th className="text-left p-4 font-medium text-gray-900">
                   Status
-                </th>
+                </th> */}
                 <th className="text-left p-4 font-medium text-gray-900">
-                  Actions
+                  Date Added
                 </th>
               </tr>
             </thead>
             <tbody>
-              {inventoryData.map((item) => (
+              {filteredParts.map((item, index) => (
                 <tr
-                  key={item.id}
+                  key={item._id}
                   className="border-b border-gray-100 hover:bg-gray-50"
                 >
-                  <td className="p-4 text-gray-900">{item.id}</td>
+                  <td className="p-4">{++index}</td>
                   <td className="p-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xl">
-                      {item.photo}
+                    <div className="w-10 h-10  rounded-lg flex items-center justify-center text-xl">
+                      <img
+                        src={
+                          item?.image && item.image.trim() !== ""
+                            ? item.image
+                            : "https://images.unsplash.com/photo-1715264687317-545c16c5d1fd?q=80&w=687&auto=format&fit=crop"
+                        }
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src =
+                            "https://images.unsplash.com/photo-1715264687317-545c16c5d1fd?q=80&w=687&auto=format&fit=crop";
+                        }}
+                        className="object-cover w-10 h-10 rounded-lg"
+                        alt="part"
+                      />
                     </div>
                   </td>
-                  <td className="p-4 text-gray-900">{item.qrId}</td>
-                  <td className="p-4 text-gray-900">{item.partName}</td>
-                  <td className="p-4 text-gray-900">{item.model}</td>
-                  <td className="p-4 text-gray-900">{item.quantity}</td>
-                  <td className="p-4">
+                  <td className="p-4 text-gray-900">{item.part_number}</td>
+                  <td className="p-4 text-gray-900">{item.part_name}</td>
+                  <td className="p-4 text-gray-900">
+                    {item?.model || "Arjuna advance "}
+                  </td>
+                  <td className="p-4 text-gray-900">
+                    {
+                      item.inventory.filter((inv) => inv.status === "in-stock")
+                        .length
+                    }
+                  </td>
+                  {/* <td className="p-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${item.statusColor}`}
+                      className={`px-3 py-1 rounded-full text-sm font-medium bg-green-500`}
                     >
                       {item.status}
                     </span>
-                  </td>
-                  <td className="p-4">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreHorizontal className="w-5 h-5" />
-                    </button>
+                  </td> */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {new Date(item.date).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </td>
                 </tr>
               ))}

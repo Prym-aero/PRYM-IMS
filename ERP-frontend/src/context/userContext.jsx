@@ -31,7 +31,7 @@ export const UserProvider = ({ children }) => {
     };
 
     fetchUserRole();
-  }, [navigate]);
+  }, []);
 
   const logout = () => {
     setUser(null);

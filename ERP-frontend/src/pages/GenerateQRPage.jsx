@@ -69,7 +69,12 @@ const GenerateQRPage = () => {
     }
   };
 
-  if (!user) return <div>Loading...</div>;
+  if (!user)
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-400 border-t-transparent" />
+      </div>
+    );
 
   return (
     <div className="flex h-screen bg-gray-100">

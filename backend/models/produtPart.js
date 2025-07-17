@@ -42,6 +42,18 @@ const productPartSchema = new mongoose.Schema({
     date: {
         type: Date,
         default: Date.now,
+    },
+    part_description: {
+        type: String,
+        default: "",
+    },
+    image: {
+        type: String,
+        default: ""
+    },
+    images: {
+        type: [String],
+        default: []
     }
 });
 

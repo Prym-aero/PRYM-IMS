@@ -284,7 +284,7 @@ const ERPMDashboard = () => {
                         {item.organization}
                       </td>
                       <td
-                        className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium"
+                        className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium cursor-pointer"
                         onClick={() => navigate(`/part/${item._id}`)}
                       >
                         {item.part_name}
@@ -303,7 +303,7 @@ const ERPMDashboard = () => {
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800`}
                         >
-                          {item.status || "Inventory"}
+                          {item.status || "in-stock"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
