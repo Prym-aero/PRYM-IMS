@@ -107,7 +107,7 @@ const ERPQRScanner = () => {
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",
-      part_name: data.part_name,
+      part_name: data.part_name || "",
       part_number: data.part_number || "N/A",
       timestamp: new Date(data.date).toLocaleString(),
       date: data.date,
@@ -254,13 +254,23 @@ const ERPQRScanner = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {!isSessionStarted && (
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">
                 Start New Scan Session
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-4 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">
+                    Purpose
+                  </label>
+                  <select className="w-full p-2 border rounded-lg">
+                    <option>Dispatch</option>
+                    <option>Receiving</option>
+                    <option>Audit</option>
+                  </select>
+                </div>
                 <div>
                   <label className="text-sm text-gray-600">Part Name</label>
                   <input
@@ -322,29 +332,36 @@ const ERPQRScanner = () => {
                     className="w-full p-2 border rounded-lg"
                   />
                 </div>
-
-                <button
-                  onClick={() => {
-                    const now = new Date();
-                    const formattedDate = now.toLocaleDateString("en-US");
-                    const formattedTime = now.toLocaleTimeString("en-US");
-                    setSessionData((prev) => ({
-                      ...prev,
-                      startedAt: `${formattedDate} - ${formattedTime}`,
-                      sessionId: `SESSION-${Math.random()
-                        .toString(36)
-                        .substr(2, 6)
-                        .toUpperCase()}`,
-                      operationDate: formattedDate,
-                    }));
-                    setIsSessionStarted(true);
-                    console.log("session is ", isSessionStarted);
-                  }}
-                  className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
-                >
-                  Start Session
-                </button>
+                <div>
+                  <label className="text-sm text-gray-600">Part Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="w-full p-2 border rounded-lg"
+                  />
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  const now = new Date();
+                  const formattedDate = now.toLocaleDateString("en-US");
+                  const formattedTime = now.toLocaleTimeString("en-US");
+                  setSessionData((prev) => ({
+                    ...prev,
+                    startedAt: `${formattedDate} - ${formattedTime}`,
+                    sessionId: `SESSION-${Math.random()
+                      .toString(36)
+                      .substr(2, 6)
+                      .toUpperCase()}`,
+                    operationDate: formattedDate,
+                  }));
+                  setIsSessionStarted(true);
+                  console.log("session is ", isSessionStarted);
+                }}
+                className="w-full bg-blue-500 text-white py-2 px-4 mt-3 rounded-lg hover:bg-blue-600"
+              >
+                Start Session
+              </button>
             </div>
           )}
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -21,6 +22,7 @@ const ERPMDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [parts, setParts] = useState([]);
   const [lastPart, setLastPart] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -30,7 +32,6 @@ const ERPMDashboard = () => {
         if (res.status === 200) {
           const fetchedParts = res.data.parts;
           setParts(fetchedParts);
-          console.log("Fetched parts from API:", fetchedParts);
           setLastPart(fetchedParts[fetchedParts.length - 1]);
         }
       } catch (err) {
@@ -41,48 +42,7 @@ const ERPMDashboard = () => {
     fetchInventory();
   }, []);
 
-  const inventoryData = [
-    {
-      id: "PRT001",
-      name: "Motor",
-      model: "MX-4500",
-      quantity: 100,
-      status: "In Stock",
-      date: "2025-07-12",
-    },
-    {
-      id: "PRT002",
-      name: "Propeller",
-      model: "PX-900",
-      quantity: 80,
-      status: "In Stock",
-      date: "2025-07-12",
-    },
-    {
-      id: "PRT003",
-      name: "Frame",
-      model: "FM-300",
-      quantity: 50,
-      status: "Used",
-      date: "2025-07-10",
-    },
-    {
-      id: "PRT004",
-      name: "Battery",
-      model: "BT-200",
-      quantity: 120,
-      status: "In Stock",
-      date: "2025-07-09",
-    },
-    {
-      id: "PRT005",
-      name: "Controller",
-      model: "CT-100",
-      quantity: 35,
-      status: "Assigned",
-      date: "2025-07-08",
-    },
-  ];
+ 
 
   // State variables
 
@@ -155,6 +115,18 @@ const ERPMDashboard = () => {
     }
   };
 
+  const inStockCount = parts.reduce((acc, part) => {
+    const inStockItems =
+      part.inventory?.filter((item) => item.status === "in-stock") || [];
+    return acc + inStockItems.length;
+  }, 0);
+
+  const usedCount = parts.reduce((acc, part) => {
+    const usedItems =
+      part.inventory?.filter((item) => item.status === "used") || [];
+    return acc + usedItems.length;
+  }, 0);
+
   return (
     <div className="w-full h-screen bg-gray-50">
       {/* Main Content */}
@@ -201,10 +173,7 @@ const ERPMDashboard = () => {
                     Total Parts in Stock
                   </p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {parts.reduce(
-                      (acc, part) => acc + (part.inventory?.length || 0),
-                      0
-                    )}
+                    {inStockCount}
                   </p>
                   <p className="text-xs text-green-600 mt-1">
                     ↗ 8% from last month
@@ -223,7 +192,9 @@ const ERPMDashboard = () => {
                   <p className="text-sm text-gray-600 mb-1">
                     Parts Used / Scanned
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">78</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {usedCount}
+                  </p>
                   <p className="text-xs text-red-600 mt-1">
                     ↗ 5% from last week
                   </p>
@@ -312,14 +283,21 @@ const ERPMDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.organization}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                      <td
+                        className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium"
+                        onClick={() => navigate(`/part/${item._id}`)}
+                      >
                         {item.part_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.part_number}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.inventory.length}
+                        {
+                          item.inventory.filter(
+                            (inv) => inv.status === "in-stock"
+                          ).length
+                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

@@ -13,20 +13,25 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserRole = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
       try {
         const res = await axios.get(`${API_URL}/api/ERP/user`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(res.data.user);
+        setUser(res.data);
       } catch (err) {
-        console.error("Failed to fetch user role", err);
+        console.error("Failed to fetch user role");
+        navigate("/login");
       }
     };
 
     fetchUserRole();
-  }, []);
+  }, [navigate]);
 
   const logout = () => {
     setUser(null);

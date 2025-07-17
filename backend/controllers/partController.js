@@ -115,6 +115,54 @@ exports.dispatchPart = async (req, res) => {
     }
 };
 
+exports.getInventoryPartById = async (req, res) => {
+    const { partNumber, id } = req.params;
+
+    try {
+        const part = await Part.findOne({ part_number: partNumber });
+
+        if (!part) {
+            return res.status(404).json({ message: 'Part not found' });
+        }
+
+        // Find the inventory item by `id`
+        const inventoryItem = part.inventory.find(item => item.id === id);
+
+        if (!inventoryItem) {
+            return res.status(404).json({ message: 'Inventory item not found' });
+        }
+
+        if (inventoryItem.status === 'used') {
+            return res.status(400).json({ message: 'Item is already dispatched' });
+        }
+
+        res.json({ message: 'Inventory item dispatched successfully', part });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+
+exports.getPartById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const part = await Part.findById(id);
+
+        if (!part) {
+            return res.status(404).json({ message: "part not found " });
+
+        }
+
+        res.status(200).json({ message: 'part found successfully', part });
+
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
 
 
 exports.getInventoryStats = async (req, res) => {

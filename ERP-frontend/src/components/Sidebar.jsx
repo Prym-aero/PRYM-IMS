@@ -8,15 +8,21 @@ import {
   LogOut,
 } from "lucide-react";
 import axios from "axios";
-
+import { useUser } from "../context/userContext";
+import { useNavigate } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
-  const [role, setRole] = useState("admin");
+  const navigate = useNavigate();
+  const { user, logout } = useUser();
+  const [role, setRole] = useState("");
 
-  
+  useEffect(() => {
+    if (user?.role) {
+      setRole(user?.role);
+    }
+  }, [user]);
 
-  
   const menuItems = [
     {
       id: "dashboard",
@@ -82,10 +88,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       <div className="border-t border-sky-400">
         <button
           className="w-full flex items-center px-6 py-3 text-left hover:bg-sky-400 transition-colors"
-          onClick={() => {
-            localStorage.removeItem("token");
-            window.location.reload(); // Or redirect to login page
-          }}
+          onClick={logout}
         >
           <LogOut className="mr-3 h-5 w-5" />
           Logout
