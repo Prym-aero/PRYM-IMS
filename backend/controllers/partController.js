@@ -108,7 +108,7 @@ exports.dispatchPart = async (req, res) => {
 
         await part.save();
 
-        res.json({ message: 'Inventory item dispatched successfully', part });
+        res.json({ message: 'Inventory item dispatched successfully', inventoryItem });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });

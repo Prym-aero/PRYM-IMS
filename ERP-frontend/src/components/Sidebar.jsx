@@ -48,12 +48,12 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: Package,
       roles: ["admin", "inventory"],
     },
-    {
-      id: "admin",
-      label: "Admin Panel",
-      icon: Settings,
-      roles: ["admin"],
-    },
+    // {
+    //   id: "admin",
+    //   label: "Admin Panel",
+    //   icon: Settings,
+    //   roles: ["admin"],
+    // },
   ];
 
   return (

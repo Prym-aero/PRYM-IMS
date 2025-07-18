@@ -53,28 +53,18 @@ const GenerateQRPage = () => {
         return <ERPQRScanner />;
       case "inventory":
         return <InventoryDispatchSystem />;
-      case "admin":
-        return (
-          <div className="flex-1 bg-gray-50 p-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">
-              Admin Panel
-            </h1>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <p className="text-gray-600">Admin panel content goes here...</p>
-            </div>
-          </div>
-        );
       default:
         return null;
     }
   };
 
-  if (!user)
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-400 border-t-transparent" />
-      </div>
-    );
+  // if (!user) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen bg-gray-50">
+  //       <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-400 border-t-transparent" />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex h-screen bg-gray-100">
