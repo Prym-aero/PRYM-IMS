@@ -48,6 +48,13 @@ const InventoryDispatchSystem = () => {
   };
 
   const handleSubmitDispatch = () => {
+    if (!isDispatchFormValid()) {
+      toast.error(
+        "Please fill in all required fields and add at least one material."
+      );
+      return;
+    }
+
     const dispatchData = {
       allotmentNo: `ALT-${new Date().getFullYear()}-${Math.floor(
         Math.random() * 1000
@@ -63,6 +70,25 @@ const InventoryDispatchSystem = () => {
     setCurrentDispatchData(dispatchData);
     setDispatchStage("scanning");
     setShowDispatchModal(false);
+  };
+
+  const isDispatchFormValid = () => {
+    if (
+      !department.trim() ||
+      !date.trim() ||
+      !reportingTo.trim() ||
+      !preparedBy.trim() ||
+      !dispatchTo.trim()
+    ) {
+      return false;
+    }
+
+    // At least one valid material row
+    const hasValidMaterial = dispatchRows.some(
+      (row) => row.materialName.trim() && row.quantity.trim()
+    );
+
+    return hasValidMaterial;
   };
 
   useEffect(() => {
@@ -592,8 +618,13 @@ const InventoryDispatchSystem = () => {
                       Cancel
                     </button>
                     <button
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className={`px-6 py-2 rounded-lg text-white ${
+                        isDispatchFormValid()
+                          ? "bg-blue-600 hover:bg-blue-700"
+                          : "bg-gray-400 cursor-not-allowed"
+                      }`}
                       onClick={handleSubmitDispatch}
+                      disabled={!isDispatchFormValid()}
                     >
                       ✓ Submit Dispatch
                     </button>

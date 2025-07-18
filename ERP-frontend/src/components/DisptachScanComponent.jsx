@@ -35,7 +35,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
   // Socket connection (same as your QRScanner)
   useEffect(() => {
-    const socket = io(`${API_URL}`, {
+    const socket = io(`https://prym-ims.onrender.com`, {
       transports: ["websocket"],
     });
 
@@ -59,7 +59,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   }, []);
 
   const handleAddScannedData = async (data) => {
-    // Similar to your QRScanner but with dispatch-specific logic
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",
@@ -69,33 +68,34 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       date: data.date,
       status: "Success",
       scannedBy: "Scanner",
-      dispatchId: dispatchData.allotmentNo, // Link to dispatch
+      dispatchId: dispatchData.allotmentNo,
     };
-    let alreadyExists;
-    setScannedData((prev) => {
-      const alreadyExists = prev.some((item) => item.qrId === formatted.qrId);
-      if (!alreadyExists) {
-        const newScannedCount = prev.length + 1;
-        const newRemaining = sessionData.totalExpected - newScannedCount;
-        const newProgress = Math.floor(
-          (newScannedCount / sessionData.totalExpected) * 100
-        );
 
-        setSessionData((prevSession) => ({
-          ...prevSession,
-          scannedCount: newScannedCount,
-          remaining: newRemaining >= 0 ? newRemaining : 0,
-          progress: newProgress > 100 ? 100 : newProgress,
-        }));
-
-        return [...prev, formatted];
-      }
-      return prev;
-    });
-
-    if (!alreadyExists) {
-      await updateInventoryForDispatch(formatted, dispatchData);
+    // ✅ Check before setState
+    const alreadyExists = scannedData.some(
+      (item) => item.qrId === formatted.qrId
+    );
+    if (alreadyExists) {
+      toast.error("This item has already been scanned.");
+      return;
     }
+
+    setScannedData((prev) => [...prev, formatted]);
+
+    const newScannedCount = scannedData.length + 1;
+    const newRemaining = sessionData.totalExpected - newScannedCount;
+    const newProgress = Math.floor(
+      (newScannedCount / sessionData.totalExpected) * 100
+    );
+
+    setSessionData((prevSession) => ({
+      ...prevSession,
+      scannedCount: newScannedCount,
+      remaining: newRemaining >= 0 ? newRemaining : 0,
+      progress: newProgress > 100 ? 100 : newProgress,
+    }));
+
+    await updateInventoryForDispatch(formatted, dispatchData);
   };
 
   const updateInventoryForDispatch = async (item, dispatchInfo) => {
