@@ -29,6 +29,11 @@ const InventoryDispatchSystem = () => {
   const [parts, setParts] = useState([]);
   const [dispatchStage, setDispatchStage] = useState("form");
   const [currentDispatchData, setCurrentDispatchData] = useState(null);
+  const [department, setDepartment] = useState("");
+  const [date, setDate] = useState("");
+  const [reportingTo, setReportingTo] = useState("");
+  const [preparedBy, setPreparedBy] = useState("prymAerospace");
+  const [dispatchTo, setDispatchTo] = useState("");
 
   const navigate = useNavigate();
 
@@ -47,12 +52,11 @@ const InventoryDispatchSystem = () => {
       allotmentNo: `ALT-${new Date().getFullYear()}-${Math.floor(
         Math.random() * 1000
       )}`,
-      department: document.querySelector('[name="department"]')?.value || "",
-      date: document.querySelector('[name="date"]')?.value || "",
-      reportingTo: document.querySelector('[name="reportingTo"]')?.value || "",
-      preparedBy:
-        document.querySelector('[name="preparedBy"]')?.value || "John Doe",
-      dispatchTo: document.querySelector('[name="dispatchTo"]')?.value || "",
+      department,
+      date,
+      reportingTo,
+      preparedBy,
+      dispatchTo,
       items: dispatchRows.filter((row) => row.materialName && row.quantity),
     };
 
@@ -376,6 +380,8 @@ const InventoryDispatchSystem = () => {
                     <input
                       type="text"
                       placeholder="Enter department"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -397,9 +403,10 @@ const InventoryDispatchSystem = () => {
                       <input
                         type="date"
                         placeholder="dd-mm-yyyy"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     </div>
                   </div>
                 </div>
@@ -409,10 +416,14 @@ const InventoryDispatchSystem = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Reporting To
                     </label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option>Select supervisor</option>
-                      <option>Manager A</option>
-                      <option>Manager B</option>
+                    <select
+                      value={reportingTo}
+                      onChange={(e) => setReportingTo(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select supervisor</option>
+                      <option value="Manager A">Manager A</option>
+                      <option value="Manager B">Manager B</option>
                     </select>
                   </div>
                   <div>
@@ -421,7 +432,8 @@ const InventoryDispatchSystem = () => {
                     </label>
                     <input
                       type="text"
-                      defaultValue={"prymAerospace"}
+                      value={preparedBy}
+                      onChange={(e) => setPreparedBy(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -432,6 +444,8 @@ const InventoryDispatchSystem = () => {
                     <input
                       type="text"
                       placeholder="Enter location or person"
+                      value={dispatchTo}
+                      onChange={(e) => setDispatchTo(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
