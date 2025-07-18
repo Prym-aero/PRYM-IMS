@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Eye, EyeOff, Grid3X3, HelpCircle, Moon } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
+import { useUser } from "../context/userContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,13 @@ export default function LoginPage() {
   const [rememberDevice, setRememberDevice] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,10 +34,8 @@ export default function LoginPage() {
         toast.success("Successfully logged in!");
         localStorage.setItem("token", res.data.token);
         setTimeout(() => {
-            navigate("/");
-        },1500);
-
-
+          navigate("/");
+        }, 1500);
       }
     } catch (err) {
       console.error("error in login user", err);

@@ -55,7 +55,7 @@ const ERPQRScanner = () => {
   const [statusFilter, setStatusFilter] = useState("All Status");
 
   useEffect(() => {
-    const socket = io("https://prym-ims.onrender.com", {
+    const socket = io(`${API_URL}`, {
       transports: ["websocket"],
     });
 

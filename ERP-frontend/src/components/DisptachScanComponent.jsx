@@ -3,11 +3,11 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import { CheckCircle, AlertTriangle, X, RefreshCw } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
+const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   const [scannedData, setScannedData] = useState([]);
   const [connected, setConnected] = useState(false);
-  const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
   // Initialize with dispatch data
   const [sessionData, setSessionData] = useState({
@@ -35,7 +35,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
   // Socket connection (same as your QRScanner)
   useEffect(() => {
-    const socket = io("https://prym-ims.onrender.com", {
+    const socket = io(`${API_URL}`, {
       transports: ["websocket"],
     });
 
