@@ -238,7 +238,6 @@ const InventoryDispatchSystem = () => {
                   />
                 </div>
               </div>
-
               <div className="flex space-x-3"></div>
             </div>
           </div>
@@ -264,9 +263,6 @@ const InventoryDispatchSystem = () => {
                   <th className="text-left p-4 font-medium text-gray-900">
                     Quantity
                   </th>
-                  {/* <th className="text-left p-4 font-medium text-gray-900">
-                  Status
-                </th> */}
                   <th className="text-left p-4 font-medium text-gray-900">
                     Date Added
                   </th>
@@ -316,13 +312,6 @@ const InventoryDispatchSystem = () => {
                         ).length
                       }
                     </td>
-                    {/* <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium bg-green-500`}
-                    >
-                      {item.status}
-                    </span>
-                  </td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(item.date).toLocaleDateString("en-GB", {
                         day: "2-digit",
@@ -471,7 +460,6 @@ const InventoryDispatchSystem = () => {
                     <div className="relative">
                       <input
                         type="date"
-                        placeholder="dd-mm-yyyy"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
