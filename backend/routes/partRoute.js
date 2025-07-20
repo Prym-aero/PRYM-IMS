@@ -1,7 +1,11 @@
 require('dotenv').config();
 const express = require('express');
+const multer = require("multer");
 const router = express.Router();
-const { AddPart, getParts, addToInventory, dispatchPart, getPartById, getInventoryPartById } = require('../controllers/partController');
+const { AddPart, getParts, addToInventory, dispatchPart, getPartById, getInventoryPartById, uploadDispatchPDF } = require('../controllers/partController');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 
 router.post('/part', AddPart);
@@ -9,5 +13,6 @@ router.get('/part', getParts);
 router.post('/part/:partNumber/inventory', addToInventory);
 router.get('/part/:id', getPartById);
 router.post('/part/:partNumber/dispatch/:id', dispatchPart);
+router.post("/disptach/upload-pdf", upload.single("pdf"), uploadDispatchPDF);
 
 module.exports = router;

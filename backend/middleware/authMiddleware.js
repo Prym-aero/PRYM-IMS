@@ -17,7 +17,7 @@ const authMiddleware = async (req, res, next) => {
           req.user = { id: decoded.id }; // 👈 Attach user ID to req.user.id
           next();
      } catch (err) {
-          console.error("Auth middleware error:", err.message);
+          // console.error("Auth middleware error:", err.message);
           res.status(401).json({ message: "Unauthorized: Invalid token" });
      }
 };

@@ -13,6 +13,8 @@ import {
   Truck,
   Printer,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import "jspdf-autotable"; // For tables
 import { Toaster, toast } from "react-hot-toast";
 import axios from "axios";
 import DispatchScanComponent from "./DisptachScanComponent";
@@ -42,9 +44,56 @@ const InventoryDispatchSystem = () => {
 
   // Placeholder: Will generate a PDF of dispatch data
   const generateDispatchPDF = (dispatchData) => {
-    // Later, use libraries like jsPDF, pdfMake, or html2pdf.js
-    console.log("Generating PDF for dispatch:", dispatchData);
-    // Future implementation goes here
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Dispatch Report", 14, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Allotment No: ${dispatchData.allotmentNo}`, 14, 30);
+    doc.text(`Department: ${dispatchData.department}`, 14, 38);
+    doc.text(`Reporting To: ${dispatchData.reportingTo}`, 14, 46);
+    doc.text(`Prepared By: ${dispatchData.preparedBy}`, 14, 54);
+    doc.text(`Dispatch To: ${dispatchData.dispatchTo}`, 14, 62);
+    doc.text(
+      `Date: ${new Date(dispatchData.date).toLocaleDateString()}`,
+      14,
+      70
+    );
+
+    // Table of dispatched items
+    doc.autoTable({
+      startY: 80,
+      head: [["Material", "Description", "Qty", "Remarks"]],
+      body: dispatchData.items.map((item) => [
+        item.materialName,
+        item.description,
+        item.quantity,
+        item.remarks,
+      ]),
+    });
+
+    const fileName = `${dispatchData.allotmentNo}.pdf`;
+
+    // Save PDF to user device
+    doc.save(fileName);
+
+    // Convert to blob and send to server
+    const pdfBlob = doc.output("blob");
+
+    const formData = new FormData();
+    formData.append("pdf", pdfBlob, fileName);
+    formData.append("allotmentNo", dispatchData.allotmentNo);
+
+    axios
+      .post(`${API_URL}/api/dispatch/upload-pdf`, formData)
+      .then(() => {
+        toast.success("PDF uploaded to server.");
+      })
+      .catch((err) => {
+        console.error("Upload failed", err);
+        toast.error("Failed to upload PDF.");
+      });
   };
 
   const handleSubmitDispatch = () => {
@@ -346,6 +395,7 @@ const InventoryDispatchSystem = () => {
               dispatchData={currentDispatchData}
               onComplete={() => {
                 toast.success("Dispatch completed successfully!");
+                generateDispatchPDF(currentDispatchData);
                 setDispatchStage("form");
                 setCurrentDispatchData(null);
                 setDispatchRows([

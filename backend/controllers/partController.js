@@ -1,4 +1,7 @@
 const Part = require('../models/produtPart'); // ✅ Make sure filename is correct
+const cloudinary = require("../config/Cloudinary");
+const streamifier = require("streamifier");
+
 
 exports.AddPart = async (req, res) => {
     try {
@@ -188,5 +191,47 @@ exports.getInventoryStats = async (req, res) => {
         res.status(500).json({ error: "Something went wrong" });
     }
 };
+
+
+exports.uploadDispatchPDF = async (req, res) => {
+    try {
+        const { file } = req;
+
+        if (!file) {
+            return res.status(400).json({ message: "No file provided" });
+        }
+
+        // Upload buffer to Cloudinary using a stream
+        const streamUpload = (buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { resource_type: "raw", folder: "dispatch-reports" },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                streamifier.createReadStream(buffer).pipe(stream);
+            });
+        };
+
+        const result = await streamUpload(file.buffer);
+
+        const dispatchUrl = result.secure_url;
+
+        // Optional: Save to database
+        // await Dispatch.create({ allotmentNo: req.body.allotmentNo, pdfUrl: dispatchUrl });
+
+        res.status(200).json({ message: "PDF uploaded", url: dispatchUrl });
+    } catch (err) {
+        console.error("Cloudinary upload failed:", err);
+        res.status(500).json({ message: "Upload failed" });
+    }
+};
+
+
+
+
+
 
 
