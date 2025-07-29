@@ -1,4 +1,5 @@
 const Part = require('../models/produtPart'); // ✅ Make sure filename is correct
+const QR = require('../models/QR');
 const cloudinary = require("../config/Cloudinary");
 const streamifier = require("streamifier");
 
@@ -51,7 +52,7 @@ exports.getParts = async (req, res) => {
 
 exports.addToInventory = async (req, res) => {
     const { partNumber } = req.params;
-    const { id, part_name, date, status } = req.body;
+    const { id, part_name, date, status, partImage, serialPartNumber } = req.body;
 
     try {
         const part = await Part.findOne({ part_number: partNumber });
@@ -67,11 +68,35 @@ exports.addToInventory = async (req, res) => {
             return res.status(409).json({ message: 'This item is already present in the inventory.' });
         }
 
+        let serialPartNumberPrefix = part.lastSerialNumber + 1;
+        part.lastSerialNumber = serialPartNumberPrefix;
+
+        let qrDoc = await QR.findOne({}); // assuming only one QR document exists
+
+        if (!qrDoc) {
+            // create QR document if it doesn't exist
+            qrDoc = await QR.create({ qrId: [id] });
+            qrDoc.scannedCount = 1; // Initialize scanned count
+            await qrDoc.save();
+            console.log("Created new QR document.");
+        } else {
+
+            if (qrDoc.qrId.includes(id)) {
+                return res.status(409).json({ message: 'This QR ID already exists.' });
+            }
+
+            qrDoc.qrId.push(id);
+            qrDoc.scannedCount += 1;
+            await qrDoc.save();
+        }
+
         // ✅ Add to inventory if not exists
         part.inventory.push({
             id,
             part_name,
             part_number: partNumber,
+            partImage: partImage || "",
+            serialPartNumber: serialPartNumber + serialPartNumberPrefix,
             date: date || new Date(),
             status,
         });
@@ -228,6 +253,37 @@ exports.uploadDispatchPDF = async (req, res) => {
         res.status(500).json({ message: "Upload failed" });
     }
 };
+
+exports.UploadImage = async (req, res) => {
+    try {
+        const { file } = req;
+
+        if (!file) {
+            return res.status(400).json({ message: "No file provided" });
+        }
+
+        // Upload buffer to Cloudinary using a stream
+        const streamUpload = (buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { resource_type: "image", folder: "part-images" },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                streamifier.createReadStream(buffer).pipe(stream);
+            });
+        };
+
+        const result = await streamUpload(file.buffer);
+
+        res.status(200).json({ message: "Image uploaded", imageUrl: result.secure_url });
+    } catch (err) {
+        console.error("Cloudinary upload failed:", err);
+        res.status(500).json({ message: "Upload failed" });
+    }
+}
 
 
 

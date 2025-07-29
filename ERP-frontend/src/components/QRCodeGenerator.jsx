@@ -12,6 +12,7 @@ const QRCodeGenerator = () => {
   const [partForm, setPartForm] = useState({
     part_name: "",
     part_number: "",
+    partImage: "",
   });
 
   const [partsList, setPartsList] = useState([]);
@@ -19,6 +20,7 @@ const QRCodeGenerator = () => {
   const [quantity, setQuantity] = useState(1);
   const [qrCodes, setQrCodes] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [count, setCount] = useState(0); // Initialize count for QR codes
 
   const [productForm, setProductForm] = useState({
     product_name: "",
@@ -42,21 +44,35 @@ const QRCodeGenerator = () => {
     }
   };
 
-  useEffect(() => {
-    fetchParts();
-  }, []);
-
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/ERP/product`);
-      setProductsList(res.data.products);
+      setProductsList(res.data.products || []);
     } catch (err) {
-      console.error("Failed to fetch products:", err);
+      if (err.response?.status === 404) {
+        toast.error("No products found.");
+      } else {
+        console.error("Failed to fetch products:", err);
+        toast.error("Error fetching products.");
+      }
+    }
+  };
+
+  const fetchQRCount = async () => {
+    try {
+      const res = await axios.get(`http://localhost:3000/api/ERP/qr/count`);
+      setCount(res.data.counts.generatedCount);
+      console.log("QR Count fetched:", res.data.counts);
+    } catch (err) {
+      console.error("Failed to fetch QR count:", err);
+      // setCount(1); // Default to 1 if fetch fails
     }
   };
 
   useEffect(() => {
     fetchProducts();
+    fetchParts();
+    fetchQRCount();
   }, []);
 
   const handlePartChange = (e) => {
@@ -103,7 +119,7 @@ const QRCodeGenerator = () => {
   const totalPages = Math.ceil(qrCodes.length / itemsPerPage);
 
   // ⚙️ Generate QR codes
-  const generateQRCodes = () => {
+  const generateQRCodes = async () => {
     const selectedPart = partsList.find((part) => part._id === selectedPartId);
 
     if (!selectedPart || quantity <= 0) {
@@ -112,9 +128,11 @@ const QRCodeGenerator = () => {
     }
 
     const codes = [];
+    let localCount = count; // snapshot of count
     for (let i = 1; i <= quantity; i++) {
-      const padded = String(i).padStart(3, "0");
-      const id = `QR${padded}`;
+      localCount++; // increment locally
+      const id = `QR-00${localCount}`;
+
       const qrDataObj = {
         id,
         product_name: selectedPart.product_name,
@@ -128,6 +146,25 @@ const QRCodeGenerator = () => {
         ...qrDataObj,
         qrData: JSON.stringify(qrDataObj),
       });
+    }
+
+    // Update React state after loop finishes
+    setCount(localCount);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/ERP/qr/count`,
+        {
+          count: localCount,
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("QR codes generated successfully!");
+      }
+    } catch (error) {
+      console.error("Error generating QR codes:", error);
+      toast.error("Failed to generate QR codes");
     }
 
     setQrCodes(codes);
@@ -387,8 +424,8 @@ const QRCodeGenerator = () => {
             <input
               type="number"
               min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value))}
+              value={isNaN(quantity) ? "" : quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
               placeholder="Quantity"
               className="border p-2 rounded"
             />

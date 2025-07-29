@@ -17,6 +17,7 @@ import {
   FileText,
   Trash2,
   RefreshCw,
+  Check,
 } from "lucide-react";
 import { io } from "socket.io-client";
 import axios from "axios";
@@ -37,6 +38,8 @@ const ERPQRScanner = () => {
     progress: 0,
     partName: "",
     part_number: "",
+    serialPartNumber: "",
+    partImage: "",
     purpose: "Dispatch",
     operationDate: "7/15/2025",
     operatorName: "",
@@ -53,6 +56,7 @@ const ERPQRScanner = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [isImageUploaded, setIsImageUploaded] = useState(false);
 
   useEffect(() => {
     const socket = io(`${API_URL}`, {
@@ -84,13 +88,15 @@ const ERPQRScanner = () => {
   const handleAddToInventory = async (data) => {
     try {
       const res = await axios.post(
-        `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
+        `http://localhost:3000/api/ERP/part/${data.part_number}/inventory`,
         {
           id: data.id,
           part_name: data.part_name,
           part_number: data.part_number,
+          serialPartNumber: data.serialPartNumber, // Generate a unique serial number
           status: "in-stock",
           date: data.date,
+          partImage: data.image || sessionData.partImage || "",
         }
       );
 
@@ -98,8 +104,49 @@ const ERPQRScanner = () => {
         toast.success("added part to the inventory");
       }
     } catch (err) {
-      toast.error("the error in storing in backend is: ");
-      console.error("the error in storing in backend is: ", err);
+      if (err.response?.status === 409) {
+        toast.error("Item already exists in inventory.");
+      } else {
+        toast.error("Something went wrong.");
+      }
+      console.error(err);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", file); // 👈 name must match multer's upload.single("image")
+
+    try {
+      const res = await axios.post(
+        "http://localhost:3000/api/ERP/part/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const url = res.data.imageUrl;
+      setSessionData((prev) => ({
+        ...prev,
+        partImage: url,
+        partImageName: file.name,
+      }));
+
+      toast.success("Image uploaded successfully!");
+      console.log("Image uploaded successfully:", url);
+      setIsImageUploaded(true);
+    } catch (err) {
+      toast.error("Error uploading image: " + err.message);
+      console.error("Error uploading image: ", err);
     }
   };
 
@@ -110,38 +157,38 @@ const ERPQRScanner = () => {
       part_name: data.part_name || "",
       part_number: data.part_number || "N/A",
       timestamp: new Date(data.date).toLocaleString(),
+      serialPartNumber: sessionData.serialPartNumber || "N/A",
       date: data.date,
+      image: sessionData.partImage || "",
       status: "Success",
       scannedBy: "Scanner",
     };
 
-    let alreadyExists = false;
-    setScannedData((prev) => {
-      alreadyExists = prev.some((item) => item.qrId === formatted.qrId);
-      if (!alreadyExists) {
-        const newScannedCount = prev.length + 1;
-        const newRemaining = sessionData.totalExpected - newScannedCount;
-        const newProgress = Math.floor(
-          (newScannedCount / sessionData.totalExpected) * 100
-        );
+    // ✅ Check BEFORE updating state
+    const alreadyExists = scannedData.some(
+      (item) => item.qrId === formatted.qrId
+    );
+    if (alreadyExists) return;
 
-        // Update session stats
-        setSessionData((prevSession) => ({
-          ...prevSession,
-          scannedCount: newScannedCount,
-          remaining: newRemaining >= 0 ? newRemaining : 0,
-          progress: newProgress > 100 ? 100 : newProgress,
-        }));
+    // ✅ Update session stats
+    const newScannedCount = scannedData.length + 1;
+    const newRemaining = sessionData.totalExpected - newScannedCount;
+    const newProgress = Math.floor(
+      (newScannedCount / sessionData.totalExpected) * 100
+    );
 
-        return [...prev, formatted];
-      }
+    setSessionData((prevSession) => ({
+      ...prevSession,
+      scannedCount: newScannedCount,
+      remaining: newRemaining >= 0 ? newRemaining : 0,
+      progress: newProgress > 100 ? 100 : newProgress,
+    }));
 
-      return prev;
-    });
+    // ✅ Add scanned item to state
+    setScannedData((prev) => [...prev, formatted]);
 
-    if (!alreadyExists) {
-      await handleAddToInventory(formatted);
-    }
+    // ✅ Add to inventory
+    await handleAddToInventory(formatted);
   };
 
   const handleResetSession = () => {
@@ -262,7 +309,7 @@ const ERPQRScanner = () => {
                   Start New Scan Session
                 </h2>
                 <div className="space-y-4 grid grid-cols-2 gap-4">
-                  <div>
+                  {/* <div>
                     <label className="block text-sm text-gray-600 mb-1">
                       Purpose
                     </label>
@@ -272,7 +319,7 @@ const ERPQRScanner = () => {
                       <option>Receiving</option>
                       <option>Audit</option>
                     </select>
-                  </div>
+                  </div> */}
                   <div>
                     <label className="text-sm text-gray-600">Part Name</label>
                     <input
@@ -296,6 +343,22 @@ const ERPQRScanner = () => {
                         setSessionData((prev) => ({
                           ...prev,
                           part_number: e.target.value,
+                        }))
+                      }
+                      className="w-full p-2 border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">
+                      Serial Part Number
+                    </label>
+                    <input
+                      type="text"
+                      value={sessionData.serialPartNumber || ""}
+                      onChange={(e) =>
+                        setSessionData((prev) => ({
+                          ...prev,
+                          serialPartNumber: e.target.value,
                         }))
                       }
                       className="w-full p-2 border rounded-lg"
@@ -338,11 +401,25 @@ const ERPQRScanner = () => {
                   </div>
                   <div>
                     <label className="text-sm text-gray-600">Part Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full p-2 border rounded-lg"
-                    />
+                    {isImageUploaded ? (
+                      <>
+                        <div className="w-full p-2 border rounded-lg text-green-500 font-semibold flex justify-center gap-0.5">
+                          <span> Uploaded</span>
+                          <span>
+                            <Check />
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="w-full p-2 border rounded-lg"
+                        />
+                      </>
+                    )}
                   </div>
                 </div>
                 <button
@@ -523,12 +600,14 @@ const ERPQRScanner = () => {
                   <p className="text-sm text-gray-600">Connection Status</p>
                   <div className="flex items-center">
                     <div
-                      className={`w-2 h-2 ${connected ? "bg-green-500" : "bg-red-500"
-                        }  rounded-full mr-2`}
+                      className={`w-2 h-2 ${
+                        connected ? "bg-green-500" : "bg-red-500"
+                      }  rounded-full mr-2`}
                     ></div>
                     <p
-                      className={`font-medium ${connected ? "text-green-600" : "text-red-500"
-                        }`}
+                      className={`font-medium ${
+                        connected ? "text-green-600" : "text-red-500"
+                      }`}
                     >
                       {connected ? "connected" : "disconnected"}
                     </p>

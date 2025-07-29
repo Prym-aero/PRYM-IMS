@@ -28,6 +28,10 @@ const productPartSchema = new mongoose.Schema({
                     type: String,
                     required: true,
                 },
+                serialPartNumber: {
+                    type: String,
+                    required: true,
+                },
                 status: {
                     type: String,
                     default: "in-stock"
@@ -47,9 +51,13 @@ const productPartSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    lastSerialNumber: {
+        type: Number,
+        default: 0,
+    },
     image: {
         type: String,
-        default: ""
+        default: "",
     },
     images: {
         type: [String],

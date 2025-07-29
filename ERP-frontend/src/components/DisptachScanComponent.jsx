@@ -37,7 +37,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
   // Socket connection (same as your QRScanner)
   useEffect(() => {
-    const socket = io(`https://prym-ims.onrender.com`, {
+    const socket = io(`${API_URL}`, {
       transports: ["websocket"],
     });
 
@@ -61,46 +61,49 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   }, []);
 
   const handleAddScannedData = async (data) => {
-  const formatted = {
-    id: data.id || Date.now(),
-    qrId: data.id || "N/A",
-    part_name: data.part_name || "",
-    part_number: data.part_number || "N/A",
-    timestamp: new Date(data.date).toLocaleString(),
-    date: data.date,
-    status: "Success",
-    scannedBy: "Scanner",
-    dispatchId: dispatchData.allotmentNo,
+    const formatted = {
+      id: data.id || Date.now(),
+      qrId: data.id || "N/A",
+      part_name: data.part_name || "",
+      part_number: data.part_number || "N/A",
+      timestamp: new Date(data.date).toLocaleString(),
+      date: data.date,
+      status: "Success",
+      scannedBy: "Scanner",
+      dispatchId: dispatchData.allotmentNo,
+    };
+
+    // Prevent duplicate scans
+    const alreadyExists = scannedData.some(
+      (item) => item.qrId === formatted.qrId
+    );
+    if (alreadyExists) {
+      toast.error("This item has already been scanned.");
+      return;
+    }
+
+    // Update scannedData and recalculate sessionData in one go
+    setScannedData((prev) => {
+      const updated = [...prev, formatted];
+      const newScannedCount = updated.length;
+      const newRemaining = sessionData.totalExpected - newScannedCount;
+      const newProgress = Math.floor(
+        (newScannedCount / sessionData.totalExpected) * 100
+      );
+
+      setSessionData((prevSession) => ({
+        ...prevSession,
+        scannedCount: newScannedCount,
+        remaining: newRemaining >= 0 ? newRemaining : 0,
+        progress: newProgress > 100 ? 100 : newProgress,
+      }));
+
+      return updated;
+    });
+
+    // Perform backend update
+    await updateInventoryForDispatch(formatted, dispatchData);
   };
-
-  // Prevent duplicate scans
-  const alreadyExists = scannedData.some((item) => item.qrId === formatted.qrId);
-  if (alreadyExists) {
-    toast.error("This item has already been scanned.");
-    return;
-  }
-
-  // Update scannedData and recalculate sessionData in one go
-  setScannedData((prev) => {
-    const updated = [...prev, formatted];
-    const newScannedCount = updated.length;
-    const newRemaining = sessionData.totalExpected - newScannedCount;
-    const newProgress = Math.floor((newScannedCount / sessionData.totalExpected) * 100);
-
-    setSessionData((prevSession) => ({
-      ...prevSession,
-      scannedCount: newScannedCount,
-      remaining: newRemaining >= 0 ? newRemaining : 0,
-      progress: newProgress > 100 ? 100 : newProgress,
-    }));
-
-    return updated;
-  });
-
-  // Perform backend update
-  await updateInventoryForDispatch(formatted, dispatchData);
-};
-
 
   const updateInventoryForDispatch = async (item, dispatchInfo) => {
     try {
