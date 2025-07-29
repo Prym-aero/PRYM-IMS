@@ -40,7 +40,7 @@ const InventoryDispatchSystem = () => {
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // You can change this to 10, 20, etc.
+  const itemsPerPage = 7; // You can change this to 10, 20, etc.
 
   // Placeholder: Will generate a PDF of dispatch data
   const generateDispatchPDF = (dispatchData) => {
@@ -377,7 +377,7 @@ const InventoryDispatchSystem = () => {
               dispatchData={currentDispatchData}
               onComplete={() => {
                 toast.success("Dispatch completed successfully!");
-                generateDispatchPDF(currentDispatchData);
+                // generateDispatchPDF(currentDispatchData);
                 setDispatchStage("form");
                 setCurrentDispatchData(null);
                 setDispatchRows([

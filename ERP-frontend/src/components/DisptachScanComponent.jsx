@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { CheckCircle, AlertTriangle, X, RefreshCw } from "lucide-react";
+import "jspdf-autotable";
+import jsPDF from "jspdf";
 import { Toaster, toast } from "react-hot-toast";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -59,34 +61,31 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   }, []);
 
   const handleAddScannedData = async (data) => {
-    const formatted = {
-      id: data.id || Date.now(),
-      qrId: data.id || "N/A",
-      part_name: data.part_name || "",
-      part_number: data.part_number || "N/A",
-      timestamp: new Date(data.date).toLocaleString(),
-      date: data.date,
-      status: "Success",
-      scannedBy: "Scanner",
-      dispatchId: dispatchData.allotmentNo,
-    };
+  const formatted = {
+    id: data.id || Date.now(),
+    qrId: data.id || "N/A",
+    part_name: data.part_name || "",
+    part_number: data.part_number || "N/A",
+    timestamp: new Date(data.date).toLocaleString(),
+    date: data.date,
+    status: "Success",
+    scannedBy: "Scanner",
+    dispatchId: dispatchData.allotmentNo,
+  };
 
-    // ✅ Check before setState
-    const alreadyExists = scannedData.some(
-      (item) => item.qrId === formatted.qrId
-    );
-    if (alreadyExists) {
-      toast.error("This item has already been scanned.");
-      return;
-    }
+  // Prevent duplicate scans
+  const alreadyExists = scannedData.some((item) => item.qrId === formatted.qrId);
+  if (alreadyExists) {
+    toast.error("This item has already been scanned.");
+    return;
+  }
 
-    setScannedData((prev) => [...prev, formatted]);
-
-    const newScannedCount = scannedData.length + 1;
+  // Update scannedData and recalculate sessionData in one go
+  setScannedData((prev) => {
+    const updated = [...prev, formatted];
+    const newScannedCount = updated.length;
     const newRemaining = sessionData.totalExpected - newScannedCount;
-    const newProgress = Math.floor(
-      (newScannedCount / sessionData.totalExpected) * 100
-    );
+    const newProgress = Math.floor((newScannedCount / sessionData.totalExpected) * 100);
 
     setSessionData((prevSession) => ({
       ...prevSession,
@@ -95,8 +94,13 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       progress: newProgress > 100 ? 100 : newProgress,
     }));
 
-    await updateInventoryForDispatch(formatted, dispatchData);
-  };
+    return updated;
+  });
+
+  // Perform backend update
+  await updateInventoryForDispatch(formatted, dispatchData);
+};
+
 
   const updateInventoryForDispatch = async (item, dispatchInfo) => {
     try {

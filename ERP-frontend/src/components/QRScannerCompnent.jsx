@@ -424,7 +424,7 @@ const ERPQRScanner = () => {
             )}
 
             {/* Scan Controls */}
-            <div className="bg-white rounded-lg shadow p-6">
+            {/* <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Scan Controls</h2>
               <div className="space-y-4">
                 <div>
@@ -454,7 +454,7 @@ const ERPQRScanner = () => {
                       className="w-full p-2 border rounded-lg"
                     />
 
-                    {/* <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" /> */}
+                   
                   </div>
                 </div>
                 <div>
@@ -499,7 +499,7 @@ const ERPQRScanner = () => {
                   Export as CSV
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Session Status */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -523,14 +523,12 @@ const ERPQRScanner = () => {
                   <p className="text-sm text-gray-600">Connection Status</p>
                   <div className="flex items-center">
                     <div
-                      className={`w-2 h-2 ${
-                        connected ? "bg-green-500" : "bg-red-500"
-                      }  rounded-full mr-2`}
+                      className={`w-2 h-2 ${connected ? "bg-green-500" : "bg-red-500"
+                        }  rounded-full mr-2`}
                     ></div>
                     <p
-                      className={`font-medium ${
-                        connected ? "text-green-600" : "text-red-500"
-                      }`}
+                      className={`font-medium ${connected ? "text-green-600" : "text-red-500"
+                        }`}
                     >
                       {connected ? "connected" : "disconnected"}
                     </p>

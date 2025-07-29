@@ -214,10 +214,10 @@ const ERPMDashboard = () => {
                     Latest Part Added
                   </p>
                   <p className="text-[22px] font-semibold text-gray-900">
-                    {lastPart?.part_name || "N/A"}
+                    {lastPart?.part_name || "No Part Added"}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {lastPart?.part_number || "N/A"}
+                    {lastPart?.part_number || "No Part Found"}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     {lastPart?.date
