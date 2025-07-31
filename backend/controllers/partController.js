@@ -44,7 +44,7 @@ exports.getParts = async (req, res) => {
         res.status(200).json({ message: "fetching all the problem successfully", parts });
 
     } catch (err) {
-        console.log('the error in fetching list of parts', err)
+        console.error('Error fetching list of parts:', err);
         res.status(500).json({ message: "internal server error", err });
     }
 }
@@ -91,7 +91,6 @@ exports.addToInventory = async (req, res) => {
             qrDoc = await QR.create({ qrId: [id] });
             qrDoc.scannedCount = 1; // Initialize scanned count
             await qrDoc.save();
-            console.log("Created new QR document.");
         } else {
             qrDoc.qrId.push(id);
             qrDoc.scannedCount += 1;

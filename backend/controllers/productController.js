@@ -34,7 +34,7 @@ exports.getProcuts = async (req, res) => {
         res.status(200).json({ message: "products fetch successfully", products });
 
     } catch (err) {
-        console.log("the error in fetching products is", err);
+        console.error("Error fetching products:", err);
         res.status(500).json({ message: "Internal server error", err });
     }
 }

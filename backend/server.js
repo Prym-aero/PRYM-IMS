@@ -27,7 +27,6 @@ app.get('/', (req, res) => {
 })
 
 app.get('/ping', (req, res) => {
-    console.log('pong');
     res.status(200).send('pong');
 });
 
@@ -43,7 +42,7 @@ app.use('/api/ERP', QRRoutes);
 const PORT = process.env.PORT;
 
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    // Server started successfully
 })
 
 

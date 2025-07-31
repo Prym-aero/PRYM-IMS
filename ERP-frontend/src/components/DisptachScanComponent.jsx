@@ -42,7 +42,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     });
 
     socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
       setConnected(true);
     });
 
@@ -51,7 +50,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     });
 
     socket.on("qr-received", (data) => {
-      console.log("QR Received:", data);
       handleAddScannedData(data);
     });
 

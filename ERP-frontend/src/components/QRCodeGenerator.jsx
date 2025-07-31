@@ -64,7 +64,6 @@ const QRCodeGenerator = () => {
     try {
       const res = await axios.get(`${API_URL}/api/ERP/qr/count`);
       setCount(res.data.counts.generatedCount);
-      console.log("QR Count fetched:", res.data.counts);
     } catch (err) {
       console.error("Failed to fetch QR count:", err);
       // setCount(1); // Default to 1 if fetch fails

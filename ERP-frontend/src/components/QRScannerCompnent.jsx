@@ -171,7 +171,6 @@ const ERPQRScanner = () => {
       }));
 
       toast.success("Image uploaded successfully!");
-      console.log("Image uploaded successfully:", url);
       setIsImageUploaded(true);
     } catch (err) {
       toast.error("Error uploading image: " + err.message);

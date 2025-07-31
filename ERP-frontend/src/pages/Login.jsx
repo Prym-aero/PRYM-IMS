@@ -44,12 +44,10 @@ export default function LoginPage() {
 
   const handleForgotPassword = () => {
     // Handle forgot password logic
-    console.log("Forgot password clicked");
   };
 
   const handleITSupport = () => {
     // Handle IT support contact
-    console.log("IT Support contacted");
   };
 
   const toggleDarkMode = () => {
