@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import QRCode from "react-qr-code";
 import { v4 as uuidv4 } from "uuid";
-import { Download } from "lucide-react";
+import { Download, CheckCircle, RefreshCw } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import axios from "axios";
@@ -62,7 +62,7 @@ const QRCodeGenerator = () => {
 
   const fetchQRCount = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/ERP/qr/count`);
+      const res = await axios.get(`${API_URL}/api/ERP/qr/count`);
       setCount(res.data.counts.generatedCount);
       console.log("QR Count fetched:", res.data.counts);
     } catch (err) {
@@ -168,7 +168,7 @@ const QRCodeGenerator = () => {
       setCount(localCount);
 
       const response = await axios.post(
-        `http://localhost:3000/api/ERP/qr/count`,
+        `${API_URL}/api/ERP/qr/count`,
         {
           count: localCount,
         }
@@ -257,6 +257,15 @@ const QRCodeGenerator = () => {
     } finally {
       setIsExporting(false);
     }
+  };
+
+  // Handle completing generation (reset for new generation)
+  const handleCompleteGeneration = () => {
+    setQrCodes([]);
+    setCurrentPage(1);
+    setSelectedPartId("");
+    setQuantity(1);
+    toast.success("Generation completed! Ready to generate new QR codes.");
   };
 
   return (
@@ -499,26 +508,35 @@ const QRCodeGenerator = () => {
               <h2 className="text-2xl font-semibold text-gray-800">
                 Generated QR Codes
               </h2>
-              <button
-                onClick={exportAsPDF}
-                disabled={isExporting}
-                className={`px-4 py-2 rounded flex items-center text-white ${isExporting
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-sky-500 hover:bg-sky-600"
-                  }`}
-              >
-                {isExporting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Export as PDF
-                  </>
-                )}
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={exportAsPDF}
+                  disabled={isExporting}
+                  className={`px-4 py-2 rounded flex items-center text-white ${isExporting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-sky-500 hover:bg-sky-600"
+                    }`}
+                >
+                  {isExporting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export as PDF
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleCompleteGeneration}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded flex items-center"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Complete Generation
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

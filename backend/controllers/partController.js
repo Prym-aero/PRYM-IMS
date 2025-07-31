@@ -364,7 +364,8 @@ exports.updatePart = async (req, res) => {
             cadModel,
             manufacturer,
             grade,
-            dimensions
+            dimensions,
+            images
         } = req.body;
 
         if (!id) {
@@ -387,6 +388,7 @@ exports.updatePart = async (req, res) => {
         if (manufacturer !== undefined) part.manufacturer = manufacturer;
         if (grade !== undefined) part.grade = grade;
         if (dimensions !== undefined) part.dimensions = dimensions;
+        if (images !== undefined) part.images = images;
 
         await part.save();
 

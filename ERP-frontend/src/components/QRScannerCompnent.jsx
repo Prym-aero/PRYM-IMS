@@ -89,7 +89,7 @@ const ERPQRScanner = () => {
   useEffect(() => {
     const fetchQRIds = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/ERP/qr/scanned-ids`);
+        const res = await axios.get(`${API_URL}/api/ERP/qr/scanned-ids`);
         setQrIds(res.data.scannedQRIds || []);
       } catch (err) {
         console.error('Error fetching QR IDs:', err);
@@ -108,7 +108,7 @@ const ERPQRScanner = () => {
   const handleAddToInventory = async (data) => {
     try {
       const res = await axios.post(
-        `http://localhost:3000/api/ERP/part/${data.part_number}/inventory`,
+        `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
         {
           id: data.id,
           part_name: data.part_name,
@@ -154,7 +154,7 @@ const ERPQRScanner = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/ERP/part/upload",
+        `${API_URL}/api/ERP/part/upload`,
         formData,
         {
           headers: {

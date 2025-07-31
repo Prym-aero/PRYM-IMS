@@ -8,6 +8,8 @@ import {
   X,
   Save,
   Edit,
+  Upload,
+  Plus,
 } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -18,6 +20,7 @@ const SinglePartPage = () => {
   const [part, setPart] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const { id } = useParams();
 
   // Form data for editing
@@ -98,12 +101,49 @@ const SinglePartPage = () => {
     }
   };
 
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await axios.post(`${API_URL}/api/ERP/part/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const imageUrl = res.data.imageUrl;
+
+      // Update part with new image
+      const updateRes = await axios.put(`${API_URL}/api/ERP/part/${id}`, {
+        images: [...(part.images || []), imageUrl]
+      });
+
+      if (updateRes.status === 200) {
+        setPart(updateRes.data.part);
+        toast.success("Image uploaded successfully!");
+      }
+    } catch (err) {
+      toast.error("Error uploading image: " + err.message);
+      console.error("Error uploading image: ", err);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   // Handle saving changes
   const handleSaveChanges = async () => {
     setIsLoading(true);
     try {
-      // const res = await axios.put(`${API_URL}/api/ERP/part/${id}`, editForm);
-      const res = await axios.put(`http://localhost:3000/api/ERP/part/${id}`, editForm);
+      const res = await axios.put(`${API_URL}/api/ERP/part/${id}`, editForm);
 
       if (res.status === 200) {
         setPart(res.data.part);
@@ -228,25 +268,57 @@ const SinglePartPage = () => {
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <h3 className="text-lg font-semibold mb-4">Images</h3>
         <div className="grid grid-cols-3 gap-4">
-          <img
-            src={
-              part?.images?.[0] ||
-              "https://plus.unsplash.com/premium_photo-1673208484535-66a8f7d05294?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            }
-            alt="gear1"
-            className="rounded-lg object-cover h-54"
-          />
-          <img
-            src={
-              part?.images?.[1] ||
-              "https://plus.unsplash.com/premium_photo-1750262550299-a870b8b2bc27?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            }
-            alt="gear2"
-            className="rounded-lg object-cover h-54"
-          />
-          <div className="border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-            Add Image
-          </div>
+          {/* Display existing images */}
+          {part?.images?.map((imageUrl, index) => (
+            <img
+              key={index}
+              src={imageUrl}
+              alt={`Part image ${index + 1}`}
+              className="rounded-lg object-cover h-54 w-full"
+            />
+          ))}
+
+          {/* Show placeholder images if less than 2 images */}
+          {(!part?.images || part.images.length < 2) && (
+            <>
+              {!part?.images?.[0] && (
+                <img
+                  src="https://plus.unsplash.com/premium_photo-1673208484535-66a8f7d05294?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  alt="placeholder1"
+                  className="rounded-lg object-cover h-54 opacity-50"
+                />
+              )}
+              {!part?.images?.[1] && (
+                <img
+                  src="https://plus.unsplash.com/premium_photo-1750262550299-a870b8b2bc27?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  alt="placeholder2"
+                  className="rounded-lg object-cover h-54 opacity-50"
+                />
+              )}
+            </>
+          )}
+
+          {/* Add Image Button */}
+          <label className="border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm cursor-pointer hover:border-blue-400 hover:text-blue-400 transition-colors h-54">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              disabled={isUploadingImage}
+            />
+            {isUploadingImage ? (
+              <>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400 mb-2"></div>
+                <span>Uploading...</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-6 h-6 mb-2" />
+                <span>Add Image</span>
+              </>
+            )}
+          </label>
         </div>
       </div>
 
