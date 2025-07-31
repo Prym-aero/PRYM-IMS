@@ -271,19 +271,6 @@ const QRCodeGenerator = () => {
     <>
       <div className="flex-1 p-6 bg-gray-50">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b px-6 py-4 mb-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-1.01 1h.01M20 20h.01m-1.01 1h.01M12 8h4.01M16 8h.01" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-800">Parts & QR Management</h1>
-              <p className="text-gray-600">Add new parts and generate QR codes for inventory tracking</p>
-            </div>
-          </div>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -608,11 +595,10 @@ const QRCodeGenerator = () => {
               <button
                 onClick={generateQRCodes}
                 disabled={isGenerating || !selectedPartId || !quantity}
-                className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors duration-200 flex items-center justify-center ${
-                  isGenerating || !selectedPartId || !quantity
+                className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors duration-200 flex items-center justify-center ${isGenerating || !selectedPartId || !quantity
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
-                }`}
+                  }`}
               >
                 {isGenerating ? (
                   <>
@@ -653,8 +639,8 @@ const QRCodeGenerator = () => {
                     onClick={exportAsPDF}
                     disabled={isExporting}
                     className={`px-4 py-2 rounded-lg font-medium flex items-center justify-center transition-colors duration-200 ${isExporting
-                        ? "bg-gray-400 cursor-not-allowed text-white"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
                       }`}
                   >
                     {isExporting ? (
@@ -682,114 +668,111 @@ const QRCodeGenerator = () => {
 
             <div className="p-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {currentQRCodes.map((item) => (
-                <div
-                  key={uuidv4()}
-                  className="bg-white border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col items-center space-y-3"
-                >
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    <QRCode value={item.qrData} size={120} />
+                {currentQRCodes.map((item) => (
+                  <div
+                    key={uuidv4()}
+                    className="bg-white border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col items-center space-y-3"
+                  >
+                    <div className="p-2 bg-gray-50 rounded-lg">
+                      <QRCode value={item.qrData} size={120} />
+                    </div>
+                    <div className="text-center">
+                      <p className="font-bold text-gray-800 text-sm">{item.id}</p>
+                      <p className="text-xs text-gray-600 mt-1">{item.part_name}</p>
+                      <p className="text-xs text-gray-500">{item.part_number}</p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="font-bold text-gray-800 text-sm">{item.id}</p>
-                    <p className="text-xs text-gray-600 mt-1">{item.part_name}</p>
-                    <p className="text-xs text-gray-500">{item.part_number}</p>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-8 space-y-4 sm:space-y-0">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, qrCodes.length)} of {qrCodes.length} QR codes
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${currentPage === 1
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    Previous
+                  </button>
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 rounded-lg font-medium transition-colors duration-200 ${currentPage === pageNum
+                              ? "bg-blue-500 text-white"
+                              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
                   </div>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${currentPage === totalPages
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    Next
+                  </button>
                 </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            <div className="flex flex-col sm:flex-row justify-between items-center mt-8 space-y-4 sm:space-y-0">
-              <div className="text-sm text-gray-600">
-                Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, qrCodes.length)} of {qrCodes.length} QR codes
               </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                    currentPage === 1
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  Previous
-                </button>
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
 
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                          currentPage === pageNum
-                            ? "bg-blue-500 text-white"
-                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
-                    currentPage === totalPages
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-
-            {/* Hidden for PDF */}
-            <div
-              id="pdf-export-container"
-              style={{
-                position: "absolute",
-                left: "-9999px",
-                top: 0,
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "10px",
-                width: "210mm",
-                padding: "10px",
-                boxSizing: "border-box",
-              }}
-            >
-              {qrCodes.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    textAlign: "center",
-                    padding: "10px",
-                    margin: "0 auto",
-                    border: "1px solid #ccc",
-                    borderRadius: "6px",
-                  }}
-                >
-                  <QRCode value={item.qrData} size={100} />
-                  <p style={{ fontSize: "12px", fontWeight: "bold" }}>
-                    PRYM Aerospace
-                  </p>
-                </div>
-              ))}
+              {/* Hidden for PDF */}
+              <div
+                id="pdf-export-container"
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  top: 0,
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "10px",
+                  width: "210mm",
+                  padding: "10px",
+                  boxSizing: "border-box",
+                }}
+              >
+                {qrCodes.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      textAlign: "center",
+                      padding: "10px",
+                      margin: "0 auto",
+                      border: "1px solid #ccc",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <QRCode value={item.qrData} size={100} />
+                    <p style={{ fontSize: "12px", fontWeight: "bold" }}>
+                      PRYM Aerospace
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
