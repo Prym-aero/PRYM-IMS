@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { CheckCircle, AlertTriangle, X, RefreshCw } from "lucide-react";
-import "jspdf-autotable";
 import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { Toaster, toast } from "react-hot-toast";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -111,86 +111,186 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
       if (res.status === 200) {
         const partName = res.data.inventoryItem.part_name;
-        toast.success(`${partName} is disptach successfully`);
+        const qrIdRemoved = res.data.qrIdRemoved;
+
+        if (qrIdRemoved) {
+          toast.success(`${partName} dispatched successfully! QR ID removed from tracking.`);
+        } else {
+          toast.success(`${partName} dispatched successfully!`);
+        }
       }
 
       if (res.status === 400) {
         const partName = res.data.inventoryItem.part_name;
-        toast.success(`${partName} was already disptached`);
+        toast.warning(`${partName} was already dispatched`);
       }
     } catch (err) {
+      if (err.response?.status === 400) {
+        toast.warning("Item was already dispatched");
+      } else {
+        toast.error("Error dispatching item");
+      }
       console.error("Dispatch error:", err);
     }
   };
 
   // Generate dispatch PDF
   const generateDispatchPDF = (dispatchInfo, scannedItems) => {
-    const doc = new jsPDF();
+    try {
+      const doc = new jsPDF();
 
-    // Header
-    doc.setFontSize(16);
-    doc.text("Dispatch Report", 14, 20);
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(40, 40, 40);
+      doc.text("DISPATCH REPORT", 14, 25);
 
-    // Dispatch Information
-    doc.setFontSize(12);
-    doc.text(`Allotment No: ${dispatchInfo.allotmentNo}`, 14, 35);
-    doc.text(`Department: ${dispatchInfo.department}`, 14, 43);
-    doc.text(`Reporting To: ${dispatchInfo.reportingTo}`, 14, 51);
-    doc.text(`Prepared By: ${dispatchInfo.preparedBy}`, 14, 59);
-    doc.text(`Dispatch To: ${dispatchInfo.dispatchTo}`, 14, 67);
-    doc.text(`Date: ${new Date(dispatchInfo.date).toLocaleDateString()}`, 14, 75);
-    doc.text(`Session ID: ${sessionData.sessionId}`, 14, 83);
-    doc.text(`Total Items Scanned: ${scannedItems.length}`, 14, 91);
+      // Company info
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text("PRYM Aerospace", 14, 35);
+      doc.text("Inventory Management System", 14, 42);
 
-    // Table of scanned items
-    const tableData = scannedItems.map((item, index) => [
-      index + 1,
-      item.qrId,
-      item.part_name,
-      item.part_number,
-      item.timestamp,
-      item.status
-    ]);
+      // Dispatch Information
+      doc.setFontSize(12);
+      doc.setTextColor(40, 40, 40);
+      doc.text(`Allotment No: ${dispatchInfo.allotmentNo}`, 14, 55);
+      doc.text(`Department: ${dispatchInfo.department}`, 14, 63);
+      doc.text(`Reporting To: ${dispatchInfo.reportingTo}`, 14, 71);
+      doc.text(`Prepared By: ${dispatchInfo.preparedBy}`, 14, 79);
+      doc.text(`Dispatch To: ${dispatchInfo.dispatchTo}`, 14, 87);
+      doc.text(`Date: ${new Date(dispatchInfo.date).toLocaleDateString()}`, 14, 95);
+      doc.text(`Session ID: ${sessionData.sessionId}`, 14, 103);
+      doc.text(`Total Items Scanned: ${scannedItems.length}`, 14, 111);
 
-    doc.autoTable({
-      startY: 100,
-      head: [["#", "QR ID", "Part Name", "Part Number", "Timestamp", "Status"]],
-      body: tableData,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [66, 139, 202] }
-    });
+      // Table of scanned items
+      const tableData = scannedItems.map((item, index) => [
+        index + 1,
+        item.qrId || "N/A",
+        item.part_name || "N/A",
+        item.part_number || "N/A",
+        item.timestamp || "N/A",
+        item.status || "Success"
+      ]);
 
-    const fileName = `Dispatch_${dispatchInfo.allotmentNo}_${new Date().toISOString().split('T')[0]}.pdf`;
+      // Use autoTable - make sure it's available
+      try {
+        if (doc.autoTable && typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            startY: 125,
+            head: [["#", "QR ID", "Part Name", "Part Number", "Timestamp", "Status"]],
+            body: tableData,
+            styles: {
+              fontSize: 9,
+              cellPadding: 3
+            },
+            headStyles: {
+              fillColor: [66, 139, 202],
+              textColor: [255, 255, 255],
+              fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+              fillColor: [245, 245, 245]
+            }
+          });
+        } else {
+          throw new Error("autoTable not available");
+        }
+      } catch (autoTableError) {
+        console.error("AutoTable error:", autoTableError);
+        // Fallback if autoTable is not available
+        doc.setFontSize(12);
+        doc.text("Scanned Items:", 14, 125);
 
-    // Save PDF to user device
-    doc.save(fileName);
+        doc.setFontSize(10);
+        let yPosition = 140;
 
-    // Convert to blob and send to server
-    const pdfBlob = doc.output("blob");
-    const formData = new FormData();
-    formData.append("pdf", pdfBlob, fileName);
-    formData.append("allotmentNo", dispatchInfo.allotmentNo);
+        // Header
+        doc.text("#", 14, yPosition);
+        doc.text("QR ID", 30, yPosition);
+        doc.text("Part Name", 70, yPosition);
+        doc.text("Part Number", 120, yPosition);
+        doc.text("Status", 170, yPosition);
+        yPosition += 10;
 
-    axios
-      .post(`${API_URL}/api/ERP/disptach/upload-pdf`, formData)
-      .then(() => {
-        toast.success("Dispatch PDF generated and uploaded successfully!");
-      })
-      .catch((err) => {
-        console.error("PDF upload failed:", err);
-        toast.error("PDF generated but upload failed.");
-      });
+        // Draw a line
+        doc.line(14, yPosition - 5, 200, yPosition - 5);
+
+        scannedItems.forEach((item, index) => {
+          if (yPosition > 270) { // Start new page if needed
+            doc.addPage();
+            yPosition = 20;
+          }
+
+          doc.text(`${index + 1}`, 14, yPosition);
+          doc.text(item.qrId || "N/A", 30, yPosition);
+          doc.text(item.part_name || "N/A", 70, yPosition);
+          doc.text(item.part_number || "N/A", 120, yPosition);
+          doc.text(item.status || "Success", 170, yPosition);
+          yPosition += 8;
+        });
+      }
+
+      const fileName = `Dispatch_${dispatchInfo.allotmentNo}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      // Save PDF to user device
+      doc.save(fileName);
+      toast.success("Dispatch PDF generated and downloaded successfully!");
+
+      // Convert to blob and send to server
+      const pdfBlob = doc.output("blob");
+      const formData = new FormData();
+      formData.append("pdf", pdfBlob, fileName);
+      formData.append("allotmentNo", dispatchInfo.allotmentNo);
+
+      axios
+        .post(`${API_URL}/api/ERP/disptach/upload-pdf`, formData)
+        .then(() => {
+          toast.success("Dispatch PDF uploaded to server successfully!");
+        })
+        .catch((err) => {
+          console.error("PDF upload failed:", err);
+          toast.error("PDF generated but server upload failed.");
+        });
+
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate dispatch PDF");
+    }
   };
 
-  const handleCompleteDispatch = () => {
-    // Generate PDF before completing
-    generateDispatchPDF(dispatchData, scannedData);
+  const handleCompleteDispatch = async () => {
+    try {
+      // Generate PDF before completing
+      generateDispatchPDF(dispatchData, scannedData);
 
-    onComplete({
-      dispatchId: dispatchData.allotmentNo,
-      scannedItems: scannedData,
-      status: "completed",
-    });
+      // Bulk remove QR IDs from tracking
+      const qrIds = scannedData.map(item => item.qrId);
+      if (qrIds.length > 0) {
+        const res = await axios.post(`${API_URL}/api/ERP/qr/bulk-remove`, {
+          qrIds: qrIds
+        });
+
+        if (res.status === 200) {
+          toast.success(`Dispatch completed! ${res.data.removedCount} QR IDs removed from tracking.`);
+        }
+      }
+
+      onComplete({
+        dispatchId: dispatchData.allotmentNo,
+        scannedItems: scannedData,
+        status: "completed",
+      });
+    } catch (err) {
+      console.error("Error completing dispatch:", err);
+      toast.error("Error completing dispatch");
+
+      // Still complete the dispatch even if QR removal fails
+      onComplete({
+        dispatchId: dispatchData.allotmentNo,
+        scannedItems: scannedData,
+        status: "completed",
+      });
+    }
   };
 
   return (
@@ -219,6 +319,13 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
             >
               Back to Form
+            </button>
+            <button
+              onClick={() => generateDispatchPDF(dispatchData, scannedData)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              disabled={scannedData.length === 0}
+            >
+              Test PDF
             </button>
             <button
               onClick={handleCompleteDispatch}

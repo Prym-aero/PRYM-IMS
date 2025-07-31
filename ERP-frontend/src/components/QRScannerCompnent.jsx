@@ -164,6 +164,7 @@ const ERPQRScanner = () => {
       );
 
       const url = res.data.imageUrl;
+
       setSessionData((prev) => ({
         ...prev,
         partImage: url,
@@ -622,11 +623,10 @@ const ERPQRScanner = () => {
 
                     <button
                       onClick={handleCompleteScanning}
-                      className={`w-full py-2 px-4 rounded-lg flex items-center justify-center font-medium ${
-                        scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0
+                      className={`w-full py-2 px-4 rounded-lg flex items-center justify-center font-medium ${scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0
                           ? "bg-green-600 text-white hover:bg-green-700"
                           : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                      }`}
+                        }`}
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
                       {scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0

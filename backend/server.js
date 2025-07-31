@@ -42,7 +42,7 @@ app.use('/api/ERP', QRRoutes);
 const PORT = process.env.PORT;
 
 server.listen(PORT, () => {
-    // Server started successfully
+    console.log("Server is running on port ", PORT);
 })
 
 

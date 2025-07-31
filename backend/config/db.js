@@ -5,7 +5,7 @@ const MONGO_URL = process.env.MONGO_URL;
 
 mongoose.connect(MONGO_URL)
     .then(() => {
-        // Database connected successfully
+        console.log('the database connected successfully');
     })
     .catch((err) => {
         console.error("Error connecting to the database:", err);

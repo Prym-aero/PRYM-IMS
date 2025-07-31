@@ -146,9 +146,21 @@ exports.dispatchPart = async (req, res) => {
         // Update the status to 'used'
         inventoryItem.status = 'used';
 
+        // Remove the QR ID from the QR model when dispatching
+        const qrDoc = await QR.findOne({});
+        if (qrDoc && qrDoc.qrId.includes(id)) {
+            qrDoc.qrId = qrDoc.qrId.filter(qrId => qrId !== id);
+            qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - 1);
+            await qrDoc.save();
+        }
+
         await part.save();
 
-        res.json({ message: 'Inventory item dispatched successfully', inventoryItem });
+        res.json({
+            message: 'Inventory item dispatched successfully',
+            inventoryItem,
+            qrIdRemoved: qrDoc && qrDoc.qrId.includes(id) ? false : true
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -397,6 +409,42 @@ exports.updatePart = async (req, res) => {
         });
     } catch (err) {
         console.error("Error updating part:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+// Bulk remove QR IDs from tracking (for dispatch completion)
+exports.bulkRemoveQRIds = async (req, res) => {
+    try {
+        const { qrIds } = req.body;
+
+        if (!qrIds || !Array.isArray(qrIds) || qrIds.length === 0) {
+            return res.status(400).json({ message: "QR IDs array is required" });
+        }
+
+        const qrDoc = await QR.findOne({});
+
+        if (!qrDoc) {
+            return res.status(404).json({ message: "QR document not found" });
+        }
+
+        // Filter out the QR IDs that are being dispatched
+        const originalCount = qrDoc.qrId.length;
+        qrDoc.qrId = qrDoc.qrId.filter(qrId => !qrIds.includes(qrId));
+        const removedCount = originalCount - qrDoc.qrId.length;
+
+        // Update scanned count
+        qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - removedCount);
+
+        await qrDoc.save();
+
+        res.status(200).json({
+            message: `${removedCount} QR IDs removed from tracking successfully`,
+            removedCount,
+            remainingQRIds: qrDoc.qrId.length
+        });
+    } catch (err) {
+        console.error("Error removing QR IDs:", err);
         res.status(500).json({ message: "Server error" });
     }
 }

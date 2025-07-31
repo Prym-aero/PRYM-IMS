@@ -21,6 +21,7 @@ const SinglePartPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingMainImage, setIsUploadingMainImage] = useState(false);
   const { id } = useParams();
 
   // Form data for editing
@@ -101,7 +102,52 @@ const SinglePartPage = () => {
     }
   };
 
-  // Handle image upload
+  // Handle main image upload/change
+  const handleMainImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    setIsUploadingMainImage(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await axios.post(`${API_URL}/api/ERP/part/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const imageUrl = res.data.imageUrl;
+
+      // Update part with new main image (replace the first image or add as first)
+      const updatedImages = part.images ? [...part.images] : [];
+      if (updatedImages.length > 0) {
+        updatedImages[0] = imageUrl; // Replace first image
+      } else {
+        updatedImages.push(imageUrl); // Add as first image
+      }
+
+      const updateRes = await axios.put(`${API_URL}/api/ERP/part/${id}`, {
+        images: updatedImages
+      });
+
+      if (updateRes.status === 200) {
+        setPart(updateRes.data.part);
+        toast.success("Main image updated successfully!");
+      }
+    } catch (err) {
+      toast.error("Error uploading image: " + err.message);
+      console.error("Error uploading image: ", err);
+    } finally {
+      setIsUploadingMainImage(false);
+    }
+  };
+
+  // Handle additional images upload
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -186,11 +232,31 @@ const SinglePartPage = () => {
       {/* Part Info Card */}
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <div className="flex items-center space-x-4 mb-4">
-          <img
-            src="https://images.unsplash.com/photo-1704287254232-8e82061bbbe7?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="part"
-            className="w-20 h-20 rounded-lg object-cover"
-          />
+          <div className="relative">
+            <img
+              src={
+                part?.images?.[0] ||
+                "https://images.unsplash.com/photo-1704287254232-8e82061bbbe7?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              }
+              alt="part"
+              className="w-20 h-20 rounded-lg object-cover"
+            />
+            {/* Upload/Change Main Image Button */}
+            <label className="absolute -bottom-2 -right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 cursor-pointer shadow-lg">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleMainImageUpload}
+                className="hidden"
+                disabled={isUploadingMainImage}
+              />
+              {isUploadingMainImage ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+            </label>
+          </div>
           <div>
             <h2 className="text-xl font-bold text-gray-800">
               {part?.part_name || "Aluminum Gear Housing"}
