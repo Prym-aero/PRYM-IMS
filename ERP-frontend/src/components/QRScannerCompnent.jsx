@@ -59,6 +59,10 @@ const ERPQRScanner = () => {
   const [isImageUploaded, setIsImageUploaded] = useState(false);
   const [qrIds, setQrIds] = useState([]);
 
+  // Parts dropdown state
+  const [partsList, setPartsList] = useState([]);
+  const [selectedPartId, setSelectedPartId] = useState("");
+
   useEffect(() => {
     const socket = io(`${API_URL}`, {
       transports: ["websocket"],
@@ -98,7 +102,32 @@ const ERPQRScanner = () => {
     }
 
     fetchQRIds();
+    fetchParts();
   }, [])
+
+  // Fetch parts for dropdown
+  const fetchParts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/ERP/part`);
+      setPartsList(res.data.parts || []);
+    } catch (err) {
+      console.error('Error fetching parts:', err);
+    }
+  };
+
+  // Handle part selection from dropdown
+  const handlePartSelection = (partId) => {
+    setSelectedPartId(partId);
+    const selectedPart = partsList.find(part => part._id === partId);
+
+    if (selectedPart) {
+      setSessionData(prev => ({
+        ...prev,
+        partName: selectedPart.part_name,
+        part_number: selectedPart.part_number
+      }));
+    }
+  };
 
   const formatDateForInput = (dateStr) => {
     const date = new Date(dateStr);
@@ -347,7 +376,7 @@ const ERPQRScanner = () => {
 
   return (
     <>
-      <div className=" w-full flex bg-gray-100 max-h-screen overflow-y-auto my-2">
+      <div className="w-full flex bg-gray-100">
         <div className="flex-1 p-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
@@ -398,17 +427,28 @@ const ERPQRScanner = () => {
                     </select>
                   </div> */}
                   <div>
+                    <label className="text-sm text-gray-600">Select Part</label>
+                    <select
+                      value={selectedPartId}
+                      onChange={(e) => handlePartSelection(e.target.value)}
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">-- Select a Part --</option>
+                      {partsList.map((part) => (
+                        <option key={part._id} value={part._id}>
+                          {part.part_name} ({part.part_number})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <label className="text-sm text-gray-600">Part Name</label>
                     <input
                       type="text"
                       value={sessionData.partName}
-                      onChange={(e) =>
-                        setSessionData((prev) => ({
-                          ...prev,
-                          partName: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 border rounded-lg"
+                      readOnly
+                      className="w-full p-2 border rounded-lg bg-gray-50 text-gray-700"
+                      placeholder="Auto-filled when part is selected"
                     />
                   </div>
                   <div>
@@ -416,13 +456,9 @@ const ERPQRScanner = () => {
                     <input
                       type="text"
                       value={sessionData.part_number}
-                      onChange={(e) =>
-                        setSessionData((prev) => ({
-                          ...prev,
-                          part_number: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 border rounded-lg"
+                      readOnly
+                      className="w-full p-2 border rounded-lg bg-gray-50 text-gray-700"
+                      placeholder="Auto-filled when part is selected"
                     />
                   </div>
                   <div>

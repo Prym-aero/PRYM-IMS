@@ -198,9 +198,9 @@ const InventoryDispatchSystem = () => {
 
   return (
     <>
-      <div className="flex h-screen bg-gray-50 w-full">
+      <div className="flex bg-gray-50 w-full">
         {/* Main Content */}
-        <div className="flex-1  w-full">
+        <div className="flex-1 w-full">
           {/* Header */}
           <div className="bg-white border-b border-gray-200 p-6">
             <div className="flex justify-between items-center">

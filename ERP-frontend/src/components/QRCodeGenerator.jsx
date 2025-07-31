@@ -269,44 +269,123 @@ const QRCodeGenerator = () => {
 
   return (
     <>
-      {" "}
-      <div className="flex-1 p-8">
-        <h1 className="text-3xl font-bold mb-4 text-gray-800">Adder Panel</h1>
+      <div className="flex-1 p-6 bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b px-6 py-4 mb-6">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-1.01 1h.01M20 20h.01m-1.01 1h.01M12 8h4.01M16 8h.01" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-800">Parts & QR Management</h1>
+              <p className="text-gray-600">Add new parts and generate QR codes for inventory tracking</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Total Parts</p>
+                <p className="text-3xl font-bold text-gray-900">{partsList.length}</p>
+                <p className="text-xs text-green-600 mt-1">↗ Available in system</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">QR Generated</p>
+                <p className="text-3xl font-bold text-gray-900">{count}</p>
+                <p className="text-xs text-green-600 mt-1">↗ Total codes created</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-1.01 1h.01M20 20h.01m-1.01 1h.01M12 8h4.01M16 8h.01" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Products</p>
+                <p className="text-3xl font-bold text-gray-900">{productsList.length}</p>
+                <p className="text-xs text-blue-600 mt-1">↗ Product categories</p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Add New Part Form */}
-        <div className="bg-white p-6 rounded shadow mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Add New Part
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* <input
-            name="product_name"
-            value={partForm.product_name}
-            onChange={handlePartChange}
-            placeholder="Product Name"
-            className="border p-2 rounded"
-          /> */}
-            <input
-              name="part_name"
-              value={partForm.part_name}
-              onChange={handlePartChange}
-              placeholder="Part Name"
-              className="border p-2 rounded"
-            />
-            <input
-              name="part_number"
-              value={partForm.part_number}
-              onChange={handlePartChange}
-              placeholder="Part Number"
-              className="border p-2 rounded"
-            />
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Add New Part</h2>
+                <p className="text-sm text-gray-600">Create a new part for inventory management</p>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={addNewPart}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Add Part
-          </button>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Part Name</label>
+                <input
+                  name="part_name"
+                  value={partForm.part_name}
+                  onChange={handlePartChange}
+                  placeholder="Enter part name"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Part Number</label>
+                <input
+                  name="part_number"
+                  value={partForm.part_number}
+                  onChange={handlePartChange}
+                  placeholder="Enter part number"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
+                  onClick={addNewPart}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Part
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded shadow mb-8">
@@ -448,130 +527,235 @@ const QRCodeGenerator = () => {
         </div>
 
         {/* QR Generation Section */}
-        <div className="bg-white p-6 rounded shadow mb-8">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Generate QR Codes
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select
-              onChange={(e) => setSelectedPartId(e.target.value)}
-              value={selectedPartId}
-              className="border p-2 rounded"
-            >
-              <option value="">-- Select Part --</option>
-              {partsList &&
-                partsList.map((part) => (
-                  <option key={part._id} value={part._id}>
-                    {part.part_name} ({part.part_number})
-                  </option>
-                ))}
-            </select>
-
-            <input
-              type="number"
-              min="1"
-              value={quantity === 0 ? "" : quantity}
-              onChange={(e) =>
-                setQuantity(e.target.value === "" ? 0 : Number(e.target.value))
-              }
-              placeholder="Quantity"
-              className="border p-2 rounded"
-            />
-
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-1.01 1h.01M20 20h.01m-1.01 1h.01M12 8h4.01M16 8h.01" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">QR Code Generator</h2>
+                <p className="text-sm text-gray-600">Generate QR codes for your parts inventory</p>
+              </div>
+            </div>
           </div>
 
-          <button
-            onClick={generateQRCodes}
-            disabled={isGenerating || !selectedPartId || !quantity}
-            className={`mt-4 px-4 py-2 rounded flex items-center ${isGenerating || !selectedPartId || !quantity
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-sky-500 hover:bg-sky-600"
-              } text-white`}
-          >
-            {isGenerating ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Generating...
-              </>
-            ) : (
-              "Generate QR Codes"
+          <div className="p-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Part Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Part</label>
+                <select
+                  onChange={(e) => setSelectedPartId(e.target.value)}
+                  value={selectedPartId}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">-- Choose a part to generate QR codes --</option>
+                  {partsList &&
+                    partsList.map((part) => (
+                      <option key={part._id} value={part._id}>
+                        {part.part_name} ({part.part_number})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Quantity Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={quantity === 0 ? "" : quantity}
+                  onChange={(e) =>
+                    setQuantity(e.target.value === "" ? 0 : Number(e.target.value))
+                  }
+                  placeholder="Enter quantity (1-1000)"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Selected Part Preview */}
+            {selectedPartId && partsList.find(p => p._id === selectedPartId) && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Part Preview:</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {partsList.find(p => p._id === selectedPartId)?.part_name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Part Number: {partsList.find(p => p._id === selectedPartId)?.part_number}
+                    </p>
+                  </div>
+                  {quantity > 0 && (
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">Will generate:</p>
+                      <p className="text-lg font-bold text-green-600">{quantity} QR codes</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-          </button>
+
+            {/* Generate Button */}
+            <div className="mt-6">
+              <button
+                onClick={generateQRCodes}
+                disabled={isGenerating || !selectedPartId || !quantity}
+                className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors duration-200 flex items-center justify-center ${
+                  isGenerating || !selectedPartId || !quantity
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Generating QR Codes...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 16h4.01M20 12h.01m-.01 4h.01m-1.01 1h.01M20 20h.01m-1.01 1h.01M12 8h4.01M16 8h.01" />
+                    </svg>
+                    Generate QR Codes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Show QR Codes */}
         {qrCodes.length > 0 && (
-          <div className="bg-white p-4 rounded shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Generated QR Codes
-              </h2>
-              <div className="flex space-x-3">
-                <button
-                  onClick={exportAsPDF}
-                  disabled={isExporting}
-                  className={`px-4 py-2 rounded flex items-center text-white ${isExporting
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-sky-500 hover:bg-sky-600"
-                    }`}
-                >
-                  {isExporting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Export as PDF
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleCompleteGeneration}
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded flex items-center"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Complete Generation
-                </button>
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">Generated QR Codes</h2>
+                    <p className="text-sm text-gray-600">{qrCodes.length} QR codes ready for use</p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                  <button
+                    onClick={exportAsPDF}
+                    disabled={isExporting}
+                    className={`px-4 py-2 rounded-lg font-medium flex items-center justify-center transition-colors duration-200 ${isExporting
+                        ? "bg-gray-400 cursor-not-allowed text-white"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}
+                  >
+                    {isExporting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Exporting...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export as PDF
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleCompleteGeneration}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center justify-center transition-colors duration-200"
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Complete Generation
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {currentQRCodes.map((item) => (
                 <div
                   key={uuidv4()}
-                  className="border p-2 rounded flex flex-col items-center"
+                  className="bg-white border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col items-center space-y-3"
                 >
-                  <QRCode value={item.qrData} size={100} />
-                  <p className="font-bold">{item.id}</p>
-                  <p className="text-sm text-gray-500">{item.part_name}</p>
+                  <div className="p-2 bg-gray-50 rounded-lg">
+                    <QRCode value={item.qrData} size={120} />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-gray-800 text-sm">{item.id}</p>
+                    <p className="text-xs text-gray-600 mt-1">{item.part_name}</p>
+                    <p className="text-xs text-gray-500">{item.part_number}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-center mt-6 gap-4">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-gray-200 rounded"
-              >
-                Prev
-              </button>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(p + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 bg-gray-200 rounded"
-              >
-                Next
-              </button>
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-8 space-y-4 sm:space-y-0">
+              <div className="text-sm text-gray-600">
+                Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, qrCodes.length)} of {qrCodes.length} QR codes
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                    currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Previous
+                </button>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                          currentPage === pageNum
+                            ? "bg-blue-500 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
 
             {/* Hidden for PDF */}
@@ -606,6 +790,7 @@ const QRCodeGenerator = () => {
                   </p>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         )}

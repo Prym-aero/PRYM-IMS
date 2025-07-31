@@ -57,9 +57,9 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-64 bg-sky-500 text-white h-screen flex flex-col">
+    <div className="w-64 bg-sky-500 text-white h-screen flex flex-col flex-shrink-0">
       {/* Header */}
-      <div className="p-3 border-b border-sky-400">
+      <div className="p-3 border-b border-sky-400 flex-shrink-0">
         <h1 className="text-[18px] font-bold">PRYM AEROSPACE IMS</h1>
       </div>
 
@@ -85,7 +85,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       </nav>
 
       {/* Bottom Section */}
-      <div className="border-t border-sky-400">
+      <div className="border-t border-sky-400 flex-shrink-0">
         <button
           className="w-full flex items-center px-6 py-3 text-left hover:bg-sky-400 transition-colors"
           onClick={logout}

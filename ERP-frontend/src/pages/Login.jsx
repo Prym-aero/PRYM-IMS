@@ -38,6 +38,9 @@ export default function LoginPage() {
         }, 1500);
       }
     } catch (err) {
+      if (err.response.status === 401) {
+         toast.error("Invalid email or password");
+      }
       console.error("error in login user", err);
     }
   };

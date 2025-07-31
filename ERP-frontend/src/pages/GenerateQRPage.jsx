@@ -67,9 +67,11 @@ const GenerateQRPage = () => {
   // }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      {renderContent()}
+      <div className="flex-1 overflow-auto">
+        {renderContent()}
+      </div>
     </div>
   );
 };

@@ -128,9 +128,9 @@ const ERPMDashboard = () => {
   }, 0);
 
   return (
-    <div className="w-full h-screen bg-gray-50">
+    <div className="w-full bg-gray-50">
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1">
         {/* Header */}
         <div className="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
