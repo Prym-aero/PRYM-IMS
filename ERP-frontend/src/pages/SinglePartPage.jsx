@@ -5,30 +5,118 @@ import {
   Settings,
   CalendarDays,
   Info,
+  X,
+  Save,
+  Edit,
 } from "lucide-react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { Toaster, toast } from "react-hot-toast";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const SinglePartPage = () => {
   const [part, setPart] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { id } = useParams();
 
+  // Form data for editing
+  const [editForm, setEditForm] = useState({
+    part_name: "",
+    part_number: "",
+    part_description: "",
+    material: "",
+    weight: "",
+    cadModel: "",
+    manufacturer: "",
+    grade: "",
+    dimensions: "",
+  });
+
   useEffect(() => {
-    const fetchPart = async (req, res) => {
+    const fetchPart = async () => {
       try {
+        // const res = await axios.get(`${API_URL}/api/ERP/part/${id}`);
         const res = await axios.get(`${API_URL}/api/ERP/part/${id}`);
 
         if (res.status === 200) {
-          setPart(res.data.part);
+          const partData = res.data.part;
+          setPart(partData);
+
+          // Populate edit form with current part data
+          setEditForm({
+            part_name: partData.part_name || "",
+            part_number: partData.part_number || "",
+            part_description: partData.part_description || "",
+            material: partData.material || "",
+            weight: partData.weight || "",
+            cadModel: partData.cadModel || "",
+            manufacturer: partData.manufacturer || "",
+            grade: partData.grade || "",
+            dimensions: partData.dimensions || "",
+          });
         }
       } catch (err) {
-        console.error("the error in fetching part is ", err);
+        console.error("Error fetching part:", err);
+        toast.error("Failed to fetch part details");
       }
     };
 
     fetchPart();
-  }, []);
+  }, [id]);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle opening edit modal
+  const handleEditClick = () => {
+    setShowEditModal(true);
+  };
+
+  // Handle closing edit modal
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    // Reset form to current part data
+    if (part) {
+      setEditForm({
+        part_name: part.part_name || "",
+        part_number: part.part_number || "",
+        part_description: part.part_description || "",
+        material: part.material || "",
+        weight: part.weight || "",
+        cadModel: part.cadModel || "",
+        manufacturer: part.manufacturer || "",
+        grade: part.grade || "",
+        dimensions: part.dimensions || "",
+      });
+    }
+  };
+
+  // Handle saving changes
+  const handleSaveChanges = async () => {
+    setIsLoading(true);
+    try {
+      // const res = await axios.put(`${API_URL}/api/ERP/part/${id}`, editForm);
+      const res = await axios.put(`http://localhost:3000/api/ERP/part/${id}`, editForm);
+
+      if (res.status === 200) {
+        setPart(res.data.part);
+        setShowEditModal(false);
+        toast.success("Part updated successfully!");
+      }
+    } catch (err) {
+      console.error("Error updating part:", err);
+      toast.error("Failed to update part");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -36,12 +124,16 @@ const SinglePartPage = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Part Details</h1>
         <div className="space-x-2">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 text-sm">
+          <button
+            onClick={handleEditClick}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 text-sm flex items-center"
+          >
+            <Edit className="w-4 h-4 mr-2" />
             Edit Part
           </button>
-          <button className="px-4 py-2 bg-white border rounded-lg text-sm">
+          {/* <button className="px-4 py-2 bg-white border rounded-lg text-sm">
             Print Label
-          </button>
+          </button> */}
           {/* <button className="px-4 py-2 bg-white border rounded-lg text-sm">
             Export Details
           </button>
@@ -106,28 +198,28 @@ const SinglePartPage = () => {
         <h3 className="text-lg font-semibold mb-4">Technical Specifications</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
           <div>
-            <strong>Material:</strong> Aluminum
+            <strong>Material:</strong> {part?.material || "Not specified"}
           </div>
           <div>
-            <strong>Manufacturer:</strong> Prym Aerospace
+            <strong>Manufacturer:</strong> {part?.manufacturer || "Not specified"}
           </div>
           <div>
-            <strong>Finish:</strong> Anodized Silver
+            <strong>Organization:</strong> {part?.organization || "PRYM Aerospace"}
           </div>
           <div>
-            <strong>Weight:</strong> 1.2kg
+            <strong>Weight:</strong> {part?.weight || "Not specified"}
           </div>
           <div>
-            <strong>Grade:</strong> Aerospace Grade
+            <strong>Grade:</strong> {part?.grade || "Not specified"}
           </div>
           <div>
-            <strong>Part Number:</strong> {part?.part_number || "GEAR-HSG-0091"}
+            <strong>Part Number:</strong> {part?.part_number || "Not specified"}
           </div>
           <div>
-            <strong>CAD Model:</strong> Available
+            <strong>CAD Model:</strong> {part?.cadModel || "Not available"}
           </div>
           <div>
-            <strong>Dimensions:</strong> 172mm x 105mm
+            <strong>Dimensions:</strong> {part?.dimensions || "Not specified"}
           </div>
         </div>
       </div>
@@ -234,6 +326,197 @@ const SinglePartPage = () => {
           </tbody>
         </table>
       </div> */}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-800">Edit Part Information</h2>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Part Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Part Name
+                  </label>
+                  <input
+                    type="text"
+                    name="part_name"
+                    value={editForm.part_name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter part name"
+                  />
+                </div>
+
+                {/* Part Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Part Number
+                  </label>
+                  <input
+                    type="text"
+                    name="part_number"
+                    value={editForm.part_number}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter part number"
+                  />
+                </div>
+
+                {/* Material */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Material
+                  </label>
+                  <input
+                    type="text"
+                    name="material"
+                    value={editForm.material}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter material"
+                  />
+                </div>
+
+                {/* Weight */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Weight
+                  </label>
+                  <input
+                    type="text"
+                    name="weight"
+                    value={editForm.weight}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter weight (e.g., 1.2kg)"
+                  />
+                </div>
+
+                {/* Manufacturer */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Manufacturer
+                  </label>
+                  <input
+                    type="text"
+                    name="manufacturer"
+                    value={editForm.manufacturer}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter manufacturer"
+                  />
+                </div>
+
+                {/* Grade */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Grade
+                  </label>
+                  <input
+                    type="text"
+                    name="grade"
+                    value={editForm.grade}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter grade"
+                  />
+                </div>
+
+                {/* CAD Model */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    CAD Model
+                  </label>
+                  <input
+                    type="text"
+                    name="cadModel"
+                    value={editForm.cadModel}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter CAD model info"
+                  />
+                </div>
+
+                {/* Dimensions */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Dimensions
+                  </label>
+                  <input
+                    type="text"
+                    name="dimensions"
+                    value={editForm.dimensions}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter dimensions (e.g., 172mm x 105mm)"
+                  />
+                </div>
+              </div>
+
+              {/* Part Description */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Part Description
+                </label>
+                <textarea
+                  name="part_description"
+                  value={editForm.part_description}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter part description"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end space-x-3 p-6 border-t">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveChanges}
+                disabled={isLoading}
+                className={`px-4 py-2 text-white rounded-lg flex items-center ${
+                  isLoading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toaster position="top-right" />
     </div>
   );
 };

@@ -21,6 +21,8 @@ const QRCodeGenerator = () => {
   const [qrCodes, setQrCodes] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [count, setCount] = useState(0); // Initialize count for QR codes
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const [productForm, setProductForm] = useState({
     product_name: "",
@@ -122,36 +124,49 @@ const QRCodeGenerator = () => {
   const generateQRCodes = async () => {
     const selectedPart = partsList.find((part) => part._id === selectedPartId);
 
-    if (!selectedPart || quantity <= 0) {
-      toast.error("Please select a valid part and quantity");
+    if (!selectedPart) {
+      toast.error("Please select a part");
       return;
     }
 
-    const codes = [];
-    let localCount = count; // snapshot of count
-    for (let i = 1; i <= quantity; i++) {
-      localCount++; // increment locally
-      const id = `QR-00${localCount}`;
-
-      const qrDataObj = {
-        id,
-        product_name: selectedPart.product_name,
-        part_name: selectedPart.part_name,
-        part_number: selectedPart.part_number,
-        date: selectedPart.date,
-      };
-
-      codes.push({
-        id,
-        ...qrDataObj,
-        qrData: JSON.stringify(qrDataObj),
-      });
+    if (!quantity || quantity <= 0) {
+      toast.error("Please enter a valid quantity (greater than 0)");
+      return;
     }
 
-    // Update React state after loop finishes
-    setCount(localCount);
+    if (quantity > 1000) {
+      toast.error("Maximum quantity allowed is 1000");
+      return;
+    }
+
+    setIsGenerating(true);
 
     try {
+      const codes = [];
+      let localCount = count; // snapshot of count
+
+      for (let i = 1; i <= quantity; i++) {
+        localCount++; // increment locally
+        const id = `QR-00${localCount}`;
+
+        const qrDataObj = {
+          id,
+          product_name: selectedPart.product_name,
+          part_name: selectedPart.part_name,
+          part_number: selectedPart.part_number,
+          date: selectedPart.date,
+        };
+
+        codes.push({
+          id,
+          ...qrDataObj,
+          qrData: JSON.stringify(qrDataObj),
+        });
+      }
+
+      // Update React state after loop finishes
+      setCount(localCount);
+
       const response = await axios.post(
         `http://localhost:3000/api/ERP/qr/count`,
         {
@@ -160,62 +175,88 @@ const QRCodeGenerator = () => {
       );
 
       if (response.status === 200) {
-        toast.success("QR codes generated successfully!");
+        toast.success(`${quantity} QR codes generated successfully!`);
+        setQrCodes(codes);
+        setCurrentPage(1); // Reset to first page
       }
     } catch (error) {
       console.error("Error generating QR codes:", error);
       toast.error("Failed to generate QR codes");
+    } finally {
+      setIsGenerating(false);
     }
-
-    setQrCodes(codes);
   };
 
   // ⬇️ Export as PDF
   const exportAsPDF = async () => {
-    const container = document.getElementById("pdf-export-container");
-    if (!container) return;
-
-    const qrCards = Array.from(container.children);
-    const chunkSize = 20;
-
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-
-    for (let i = 0; i < qrCards.length; i += chunkSize) {
-      const tempPage = document.createElement("div");
-      Object.assign(tempPage.style, {
-        position: "absolute",
-        left: "-9999px",
-        top: "0",
-        width: "210mm",
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "10px",
-        padding: "20px",
-        backgroundColor: "#fff",
-        boxSizing: "border-box",
-      });
-
-      for (let j = i; j < Math.min(i + chunkSize, qrCards.length); j++) {
-        tempPage.appendChild(qrCards[j].cloneNode(true));
-      }
-
-      document.body.appendChild(tempPage);
-      const canvas = await html2canvas(tempPage, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, imgHeight);
-
-      document.body.removeChild(tempPage);
+    if (qrCodes.length === 0) {
+      toast.error("No QR codes to export");
+      return;
     }
 
-    pdf.save("qr-codes.pdf");
+    setIsExporting(true);
+
+    try {
+      const container = document.getElementById("pdf-export-container");
+      if (!container) {
+        toast.error("PDF container not found");
+        return;
+      }
+
+      const qrCards = Array.from(container.children);
+      const chunkSize = 20;
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      for (let i = 0; i < qrCards.length; i += chunkSize) {
+        const tempPage = document.createElement("div");
+        Object.assign(tempPage.style, {
+          position: "absolute",
+          left: "-9999px",
+          top: "0",
+          width: "210mm",
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "10px",
+          padding: "20px",
+          backgroundColor: "#fff",
+          boxSizing: "border-box",
+        });
+
+        for (let j = i; j < Math.min(i + chunkSize, qrCards.length); j++) {
+          tempPage.appendChild(qrCards[j].cloneNode(true));
+        }
+
+        document.body.appendChild(tempPage);
+        const canvas = await html2canvas(tempPage, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, imgHeight);
+
+        document.body.removeChild(tempPage);
+      }
+
+      const selectedPart = partsList.find((part) => part._id === selectedPartId);
+      const fileName = selectedPart
+        ? `QR_Codes_${selectedPart.part_name}_${new Date().toISOString().split('T')[0]}.pdf`
+        : `QR_Codes_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      pdf.save(fileName);
+      toast.success(`PDF exported successfully with ${qrCodes.length} QR codes!`);
+
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -267,9 +308,8 @@ const QRCodeGenerator = () => {
 
           <div className="flex gap-4 mb-4">
             <button
-              className={`px-4 py-2 rounded ${
-                isAddingProduct ? "bg-blue-600 text-white" : "bg-gray-200"
-              }`}
+              className={`px-4 py-2 rounded ${isAddingProduct ? "bg-blue-600 text-white" : "bg-gray-200"
+                }`}
               onClick={() => {
                 setIsAddingProduct(true);
                 setSelectedProductId("");
@@ -279,9 +319,8 @@ const QRCodeGenerator = () => {
               ➕ Add New Product
             </button>
             <button
-              className={`px-4 py-2 rounded ${
-                !isAddingProduct ? "bg-blue-600 text-white" : "bg-gray-200"
-              }`}
+              className={`px-4 py-2 rounded ${!isAddingProduct ? "bg-blue-600 text-white" : "bg-gray-200"
+                }`}
               onClick={() => {
                 setIsAddingProduct(false);
                 setProductForm({
@@ -424,18 +463,32 @@ const QRCodeGenerator = () => {
             <input
               type="number"
               min="1"
-              value={isNaN(quantity) ? "" : quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              value={quantity === 0 ? "" : quantity}
+              onChange={(e) =>
+                setQuantity(e.target.value === "" ? 0 : Number(e.target.value))
+              }
               placeholder="Quantity"
               className="border p-2 rounded"
             />
+
           </div>
 
           <button
             onClick={generateQRCodes}
-            className="mt-4 bg-sky-500 text-white px-4 py-2 rounded hover:bg-sky-600"
+            disabled={isGenerating || !selectedPartId || !quantity}
+            className={`mt-4 px-4 py-2 rounded flex items-center ${isGenerating || !selectedPartId || !quantity
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-sky-500 hover:bg-sky-600"
+              } text-white`}
           >
-            Generate
+            {isGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Generating...
+              </>
+            ) : (
+              "Generate QR Codes"
+            )}
           </button>
         </div>
 
@@ -448,10 +501,23 @@ const QRCodeGenerator = () => {
               </h2>
               <button
                 onClick={exportAsPDF}
-                className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded flex items-center"
+                disabled={isExporting}
+                className={`px-4 py-2 rounded flex items-center text-white ${isExporting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-sky-500 hover:bg-sky-600"
+                  }`}
               >
-                <Download className="mr-2 h-4 w-4" />
-                Export as PDF
+                {isExporting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export as PDF
+                  </>
+                )}
               </button>
             </div>
 

@@ -377,7 +377,6 @@ const InventoryDispatchSystem = () => {
               dispatchData={currentDispatchData}
               onComplete={() => {
                 toast.success("Dispatch completed successfully!");
-                // generateDispatchPDF(currentDispatchData);
                 setDispatchStage("form");
                 setCurrentDispatchData(null);
                 setDispatchRows([

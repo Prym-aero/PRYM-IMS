@@ -65,13 +65,26 @@ exports.addToInventory = async (req, res) => {
         const alreadyExists = part.inventory.some((item) => item.id === id);
 
         if (alreadyExists) {
-            return res.status(409).json({ message: 'This item is already present in the inventory.' });
+            return res.status(409).json({
+                message: 'This item is already present in the inventory.',
+                status: 'duplicate',
+                isDuplicate: true
+            });
+        }
+
+        let qrDoc = await QR.findOne({}); // assuming only one QR document exists
+
+        // Check if QR ID already exists in scanned list
+        if (qrDoc && qrDoc.qrId.includes(id)) {
+            return res.status(409).json({
+                message: 'This QR ID has already been scanned.',
+                status: 'duplicate',
+                isDuplicate: true
+            });
         }
 
         let serialPartNumberPrefix = part.lastSerialNumber + 1;
         part.lastSerialNumber = serialPartNumberPrefix;
-
-        let qrDoc = await QR.findOne({}); // assuming only one QR document exists
 
         if (!qrDoc) {
             // create QR document if it doesn't exist
@@ -80,11 +93,6 @@ exports.addToInventory = async (req, res) => {
             await qrDoc.save();
             console.log("Created new QR document.");
         } else {
-
-            if (qrDoc.qrId.includes(id)) {
-                return res.status(409).json({ message: 'This QR ID already exists.' });
-            }
-
             qrDoc.qrId.push(id);
             qrDoc.scannedCount += 1;
             await qrDoc.save();
@@ -103,7 +111,12 @@ exports.addToInventory = async (req, res) => {
 
         await part.save();
 
-        res.json({ message: 'Inventory item added', part });
+        res.json({
+            message: 'Inventory item added successfully',
+            part,
+            status: 'success',
+            isDuplicate: false
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -282,6 +295,108 @@ exports.UploadImage = async (req, res) => {
     } catch (err) {
         console.error("Cloudinary upload failed:", err);
         res.status(500).json({ message: "Upload failed" });
+    }
+}
+
+// Get all scanned QR IDs
+exports.getScannedQRIds = async (req, res) => {
+    try {
+        const qrDoc = await QR.findOne({});
+
+        if (!qrDoc) {
+            return res.status(200).json({
+                message: "No QR document found",
+                scannedQRIds: []
+            });
+        }
+
+        res.status(200).json({
+            message: "Scanned QR IDs retrieved successfully",
+            scannedQRIds: qrDoc.qrId || [],
+            scannedCount: qrDoc.scannedCount || 0
+        });
+    } catch (err) {
+        console.error("Error getting scanned QR IDs:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+// Check if QR ID is already scanned
+exports.checkQRIdExists = async (req, res) => {
+    try {
+        const { qrId } = req.params;
+
+        if (!qrId) {
+            return res.status(400).json({ message: "QR ID is required" });
+        }
+
+        const qrDoc = await QR.findOne({});
+
+        if (!qrDoc) {
+            return res.status(200).json({
+                exists: false,
+                message: "QR ID not found"
+            });
+        }
+
+        const exists = qrDoc.qrId.includes(qrId);
+
+        res.status(200).json({
+            exists,
+            message: exists ? "QR ID already scanned" : "QR ID not found"
+        });
+    } catch (err) {
+        console.error("Error checking QR ID:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+// Update part information
+exports.updatePart = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            part_name,
+            part_number,
+            part_description,
+            material,
+            weight,
+            cadModel,
+            manufacturer,
+            grade,
+            dimensions
+        } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ message: "Part ID is required" });
+        }
+
+        const part = await Part.findById(id);
+
+        if (!part) {
+            return res.status(404).json({ message: "Part not found" });
+        }
+
+        // Update part fields
+        if (part_name !== undefined) part.part_name = part_name;
+        if (part_number !== undefined) part.part_number = part_number;
+        if (part_description !== undefined) part.part_description = part_description;
+        if (material !== undefined) part.material = material;
+        if (weight !== undefined) part.weight = weight;
+        if (cadModel !== undefined) part.cadModel = cadModel;
+        if (manufacturer !== undefined) part.manufacturer = manufacturer;
+        if (grade !== undefined) part.grade = grade;
+        if (dimensions !== undefined) part.dimensions = dimensions;
+
+        await part.save();
+
+        res.status(200).json({
+            message: "Part updated successfully",
+            part
+        });
+    } catch (err) {
+        console.error("Error updating part:", err);
+        res.status(500).json({ message: "Server error" });
     }
 }
 

@@ -46,4 +46,18 @@ exports.addCounts = async (req, res) => {
     }
 }
 
+exports.getQrIds = async (req, res) => {
+    try {
+        const qrData = await QR.findOne({}); // Assuming you want the first document
+        if (!qrData) {
+            return res.status(404).json({ message: "QR data not found" });
+        }
+
+        res.status(200).json({ message: "QR IDs fetched successfully", qrIds: qrData.qrId });
+    } catch (err) {
+        console.error("Error fetching QR IDs:", err);
+        res.status(500).json({ message: "Internal Server Error", err });
+    }
+}
+
 

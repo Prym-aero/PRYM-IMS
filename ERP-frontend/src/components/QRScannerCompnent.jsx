@@ -57,6 +57,7 @@ const ERPQRScanner = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [isImageUploaded, setIsImageUploaded] = useState(false);
+  const [qrIds, setQrIds] = useState([]);
 
   useEffect(() => {
     const socket = io(`${API_URL}`, {
@@ -72,13 +73,32 @@ const ERPQRScanner = () => {
     });
 
     socket.on("qr-received", (data) => {
-      handleAddScannedData(data);
+      // Only process scans if session is started
+      if (isSessionStarted) {
+        handleAddScannedData(data);
+      } else {
+        toast.error("Please start a scanning session first!");
+      }
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [isSessionStarted]); // Add isSessionStarted as dependency
+
+  useEffect(() => {
+    const fetchQRIds = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3000/api/ERP/qr/scanned-ids`);
+        setQrIds(res.data.scannedQRIds || []);
+      } catch (err) {
+        console.error('Error fetching QR IDs:', err);
+        // Don't show error toast on initial load, just log it
+      }
+    }
+
+    fetchQRIds();
+  }, [])
 
   const formatDateForInput = (dateStr) => {
     const date = new Date(dateStr);
@@ -93,7 +113,7 @@ const ERPQRScanner = () => {
           id: data.id,
           part_name: data.part_name,
           part_number: data.part_number,
-          serialPartNumber: data.serialPartNumber, // Generate a unique serial number
+          serialPartNumber: data.serialPartNumber,
           status: "in-stock",
           date: data.date,
           partImage: data.image || sessionData.partImage || "",
@@ -101,15 +121,24 @@ const ERPQRScanner = () => {
       );
 
       if (res.status === 200) {
-        toast.success("added part to the inventory");
+        toast.success("Added part to the inventory successfully!");
+        return { status: "Success", isDuplicate: false };
       }
     } catch (err) {
       if (err.response?.status === 409) {
-        toast.error("Item already exists in inventory.");
+        // Check if it's a duplicate from backend response
+        const isDuplicate = err.response?.data?.isDuplicate || false;
+        if (isDuplicate) {
+          toast.error("Item already exists in inventory!");
+          return { status: "Duplicate", isDuplicate: true };
+        } else {
+          toast.error("Item already exists in inventory.");
+          return { status: "Duplicate", isDuplicate: true };
+        }
       } else {
         toast.error("Something went wrong.");
+        return { status: "Error", isDuplicate: false };
       }
-      console.error(err);
     }
   };
 
@@ -151,44 +180,59 @@ const ERPQRScanner = () => {
   };
 
   const handleAddScannedData = async (data) => {
-    const formatted = {
+    // ✅ Check BEFORE updating state
+    const alreadyExists = scannedData.some(
+      (item) => item.qrId === data.id
+    );
+    if (alreadyExists) {
+      toast.error("This item has already been scanned in this session!");
+      return;
+    }
+
+    // Create initial formatted data
+    let formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",
-      part_name: data.part_name || "",
-      part_number: data.part_number || "N/A",
+      part_name: data.part_name || sessionData.partName,
+      part_number: data.part_number || sessionData.part_number,
       timestamp: new Date(data.date).toLocaleString(),
       serialPartNumber: sessionData.serialPartNumber || "N/A",
       date: data.date,
       image: sessionData.partImage || "",
-      status: "Success",
-      scannedBy: "Scanner",
+      status: "Success", // Default status
+      scannedBy: sessionData.operatorName || "Scanner",
     };
 
-    // ✅ Check BEFORE updating state
-    const alreadyExists = scannedData.some(
-      (item) => item.qrId === formatted.qrId
-    );
-    if (alreadyExists) return;
+    // ✅ Try to add to inventory and get the actual status
+    const inventoryResult = await handleAddToInventory(formatted);
 
-    // ✅ Update session stats
-    const newScannedCount = scannedData.length + 1;
-    const newRemaining = sessionData.totalExpected - newScannedCount;
-    const newProgress = Math.floor(
-      (newScannedCount / sessionData.totalExpected) * 100
-    );
+    // Update status based on backend response
+    if (inventoryResult) {
+      formatted.status = inventoryResult.status;
+    }
 
-    setSessionData((prevSession) => ({
-      ...prevSession,
-      scannedCount: newScannedCount,
-      remaining: newRemaining >= 0 ? newRemaining : 0,
-      progress: newProgress > 100 ? 100 : newProgress,
-    }));
+    // ✅ Add scanned item to state (even if duplicate, for tracking)
+    setScannedData((prev) => {
+      const newScannedData = [...prev, formatted];
 
-    // ✅ Add scanned item to state
-    setScannedData((prev) => [...prev, formatted]);
+      // Only count successful scans for progress
+      const successfulScans = newScannedData.filter(item => item.status === "Success");
+      const newScannedCount = successfulScans.length;
+      const newRemaining = sessionData.totalExpected - newScannedCount;
+      const newProgress = sessionData.totalExpected > 0
+        ? Math.floor((newScannedCount / sessionData.totalExpected) * 100)
+        : 0;
 
-    // ✅ Add to inventory
-    await handleAddToInventory(formatted);
+      // ✅ Update session stats based on successful scans only
+      setSessionData((prevSession) => ({
+        ...prevSession,
+        scannedCount: newScannedCount,
+        remaining: newRemaining >= 0 ? newRemaining : 0,
+        progress: newProgress > 100 ? 100 : newProgress,
+      }));
+
+      return newScannedData;
+    });
   };
 
   const handleResetSession = () => {
@@ -199,6 +243,39 @@ const ERPQRScanner = () => {
       progress: 0,
     }));
     setScannedData([]);
+    toast.success("Scanning session reset successfully!");
+  };
+
+  const handleCompleteScanning = () => {
+    if (scannedData.length === 0) {
+      toast.error("No items have been scanned yet!");
+      return;
+    }
+
+    // Show completion summary
+    const completionMessage = `Scanning completed! ${scannedData.length} items scanned out of ${sessionData.totalExpected} expected.`;
+    toast.success(completionMessage);
+
+    // Reset the session and go back to form
+    setIsSessionStarted(false);
+    setSessionData((prev) => ({
+      ...prev,
+      sessionId: "SESSION-172AD",
+      startedAt: "July 14, 2023 - 10:15 AM",
+      scannedCount: 0,
+      totalExpected: 0,
+      remaining: 0,
+      progress: 0,
+      partName: "",
+      part_number: "",
+      serialPartNumber: "",
+      partImage: "",
+      purpose: "Dispatch",
+      operationDate: "7/15/2025",
+      operatorName: "",
+    }));
+    setScannedData([]);
+    setIsImageUploaded(false);
   };
 
   const handleSubmitScans = () => {
@@ -424,6 +501,32 @@ const ERPQRScanner = () => {
                 </div>
                 <button
                   onClick={() => {
+                    // Validate all required fields
+                    if (!sessionData.partName.trim()) {
+                      toast.error("Please enter Part Name");
+                      return;
+                    }
+                    if (!sessionData.part_number.trim()) {
+                      toast.error("Please enter Part Number");
+                      return;
+                    }
+                    if (!sessionData.serialPartNumber.trim()) {
+                      toast.error("Please enter Serial Part Number");
+                      return;
+                    }
+                    if (!sessionData.operatorName.trim()) {
+                      toast.error("Please enter Operator Name");
+                      return;
+                    }
+                    if (!sessionData.partImage) {
+                      toast.error("Please upload Part Image");
+                      return;
+                    }
+                    if (!sessionData.totalExpected || sessionData.totalExpected <= 0) {
+                      toast.error("Please enter a valid Total Expected quantity");
+                      return;
+                    }
+
                     const now = new Date();
                     const formattedDate = now.toLocaleDateString("en-US");
                     const formattedTime = now.toLocaleTimeString("en-US");
@@ -432,12 +535,12 @@ const ERPQRScanner = () => {
                       startedAt: `${formattedDate} - ${formattedTime}`,
                       sessionId: `SESSION-${Math.random()
                         .toString(36)
-                        .substr(2, 6)
+                        .substring(2, 8)
                         .toUpperCase()}`,
                       operationDate: formattedDate,
                     }));
                     setIsSessionStarted(true);
-                    console.log("session is ", isSessionStarted);
+                    toast.success("Scanning session started successfully!");
                   }}
                   className="w-full bg-blue-500 text-white py-2 px-4 mt-3 rounded-lg hover:bg-blue-600"
                 >
@@ -464,38 +567,82 @@ const ERPQRScanner = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">Total Expected</p>
-                      <p className="font-medium">{sessionData.totalExpected}</p>
+                      <p className="font-medium text-blue-600">{sessionData.totalExpected}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Scanned</p>
-                      <p className="font-medium">{sessionData.scannedCount}</p>
+                      <p className="text-sm text-gray-600">Successfully Scanned</p>
+                      <p className="font-medium text-green-600">
+                        {scannedData.filter(item => item.status === "Success").length}
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Remaining</p>
-                    <p className="font-medium">{sessionData.remaining}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Remaining</p>
+                      <p className="font-medium text-orange-600">
+                        {Math.max(0, sessionData.totalExpected - scannedData.filter(item => item.status === "Success").length)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Duplicates</p>
+                      <p className="font-medium text-yellow-600">
+                        {scannedData.filter(item => item.status === "Duplicate").length}
+                      </p>
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Progress</p>
                     <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                       <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${sessionData.progress}%` }}
+                        style={{
+                          width: `${sessionData.totalExpected > 0
+                            ? Math.min(100, Math.floor((scannedData.filter(item => item.status === "Success").length / sessionData.totalExpected) * 100))
+                            : 0}%`
+                        }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
                       <span>0%</span>
-                      <span>{sessionData.progress}%</span>
+                      <span>
+                        {sessionData.totalExpected > 0
+                          ? Math.min(100, Math.floor((scannedData.filter(item => item.status === "Success").length / sessionData.totalExpected) * 100))
+                          : 0}%
+                      </span>
                       <span>100%</span>
                     </div>
                   </div>
-                  <button
-                    onClick={handleResetSession}
-                    className="w-full bg-red-50 text-red-600 py-2 px-4 rounded-lg hover:bg-red-100 flex items-center justify-center"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Reset Scan Session
-                  </button>
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* Show completion status */}
+                    {scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0 && (
+                      <div className="w-full bg-green-100 text-green-700 py-2 px-4 rounded-lg flex items-center justify-center font-medium border border-green-200">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        All Items Successfully Scanned! ({scannedData.filter(item => item.status === "Success").length}/{sessionData.totalExpected})
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleCompleteScanning}
+                      className={`w-full py-2 px-4 rounded-lg flex items-center justify-center font-medium ${
+                        scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                      }`}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0
+                        ? "Complete Scanning"
+                        : `Complete Scanning (${scannedData.filter(item => item.status === "Success").length}/${sessionData.totalExpected})`
+                      }
+                    </button>
+                    <button
+                      onClick={handleResetSession}
+                      className="w-full bg-red-50 text-red-600 py-2 px-4 rounded-lg hover:bg-red-100 flex items-center justify-center"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Reset Scan Session
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -600,16 +747,29 @@ const ERPQRScanner = () => {
                   <p className="text-sm text-gray-600">Connection Status</p>
                   <div className="flex items-center">
                     <div
-                      className={`w-2 h-2 ${
-                        connected ? "bg-green-500" : "bg-red-500"
-                      }  rounded-full mr-2`}
+                      className={`w-2 h-2 ${connected ? "bg-green-500" : "bg-red-500"
+                        }  rounded-full mr-2`}
                     ></div>
                     <p
-                      className={`font-medium ${
-                        connected ? "text-green-600" : "text-red-500"
-                      }`}
+                      className={`font-medium ${connected ? "text-green-600" : "text-red-500"
+                        }`}
                     >
                       {connected ? "connected" : "disconnected"}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Scanning Status</p>
+                  <div className="flex items-center">
+                    <div
+                      className={`w-2 h-2 ${isSessionStarted && connected ? "bg-green-500" : "bg-orange-500"
+                        }  rounded-full mr-2`}
+                    ></div>
+                    <p
+                      className={`font-medium ${isSessionStarted && connected ? "text-green-600" : "text-orange-500"
+                        }`}
+                    >
+                      {isSessionStarted && connected ? "Ready to Scan" : isSessionStarted ? "Session Started - Waiting for Connection" : "Session Not Started"}
                     </p>
                   </div>
                 </div>

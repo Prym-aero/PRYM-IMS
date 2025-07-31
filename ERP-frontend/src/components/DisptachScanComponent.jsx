@@ -125,7 +125,69 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     }
   };
 
+  // Generate dispatch PDF
+  const generateDispatchPDF = (dispatchInfo, scannedItems) => {
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFontSize(16);
+    doc.text("Dispatch Report", 14, 20);
+
+    // Dispatch Information
+    doc.setFontSize(12);
+    doc.text(`Allotment No: ${dispatchInfo.allotmentNo}`, 14, 35);
+    doc.text(`Department: ${dispatchInfo.department}`, 14, 43);
+    doc.text(`Reporting To: ${dispatchInfo.reportingTo}`, 14, 51);
+    doc.text(`Prepared By: ${dispatchInfo.preparedBy}`, 14, 59);
+    doc.text(`Dispatch To: ${dispatchInfo.dispatchTo}`, 14, 67);
+    doc.text(`Date: ${new Date(dispatchInfo.date).toLocaleDateString()}`, 14, 75);
+    doc.text(`Session ID: ${sessionData.sessionId}`, 14, 83);
+    doc.text(`Total Items Scanned: ${scannedItems.length}`, 14, 91);
+
+    // Table of scanned items
+    const tableData = scannedItems.map((item, index) => [
+      index + 1,
+      item.qrId,
+      item.part_name,
+      item.part_number,
+      item.timestamp,
+      item.status
+    ]);
+
+    doc.autoTable({
+      startY: 100,
+      head: [["#", "QR ID", "Part Name", "Part Number", "Timestamp", "Status"]],
+      body: tableData,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [66, 139, 202] }
+    });
+
+    const fileName = `Dispatch_${dispatchInfo.allotmentNo}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+    // Save PDF to user device
+    doc.save(fileName);
+
+    // Convert to blob and send to server
+    const pdfBlob = doc.output("blob");
+    const formData = new FormData();
+    formData.append("pdf", pdfBlob, fileName);
+    formData.append("allotmentNo", dispatchInfo.allotmentNo);
+
+    axios
+      .post(`${API_URL}/api/ERP/disptach/upload-pdf`, formData)
+      .then(() => {
+        toast.success("Dispatch PDF generated and uploaded successfully!");
+      })
+      .catch((err) => {
+        console.error("PDF upload failed:", err);
+        toast.error("PDF generated but upload failed.");
+      });
+  };
+
   const handleCompleteDispatch = () => {
+    // Generate PDF before completing
+    generateDispatchPDF(dispatchData, scannedData);
+
     onComplete({
       dispatchId: dispatchData.allotmentNo,
       scannedItems: scannedData,

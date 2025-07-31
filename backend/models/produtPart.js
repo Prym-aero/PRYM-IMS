@@ -62,6 +62,31 @@ const productPartSchema = new mongoose.Schema({
     images: {
         type: [String],
         default: []
+    },
+    // New fields for additional part information
+    material: {
+        type: String,
+        default: ""
+    },
+    weight: {
+        type: String,
+        default: ""
+    },
+    cadModel: {
+        type: String,
+        default: ""
+    },
+    manufacturer: {
+        type: String,
+        default: ""
+    },
+    grade: {
+        type: String,
+        default: ""
+    },
+    dimensions: {
+        type: String,
+        default: ""
     }
 });
 
