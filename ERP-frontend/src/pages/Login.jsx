@@ -39,7 +39,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       if (err.response.status === 401) {
-         toast.error("Invalid email or password");
+        toast.error("Invalid email or password");
       }
       console.error("error in login user", err);
     }
@@ -57,6 +57,8 @@ export default function LoginPage() {
     setIsDarkMode(!isDarkMode);
   };
 
+  // className="w-16 h-16 mx-auto mb-4 text-white"
+
   return (
     <>
       <div className="min-h-screen flex">
@@ -64,14 +66,17 @@ export default function LoginPage() {
         <div className="flex-1 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
           <div className="text-center text-white">
             <div className="mb-8">
-              <Grid3X3 className="w-16 h-16 mx-auto mb-4 text-white" />
+              <img
+                src="/PRYM_Aerospace_Logo-02-removebg-preview.png"
+                alt="PRYM LOGO"
+                className="w-40 h-40 mx-auto mb-4 object-cover " />
             </div>
             <h1 className="text-5xl font-bold mb-4 tracking-wide">
               PRYM AEROSPACE IMS
             </h1>
-            <p className="text-xl text-blue-100 font-medium">
+            {/* <p className="text-xl text-blue-100 font-medium">
               Your Trusted Inventory & QR System
-            </p>
+            </p> */}
           </div>
         </div>
 
@@ -81,10 +86,10 @@ export default function LoginPage() {
             <div className="bg-white rounded-lg shadow-lg p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Login to ERPM
+                  Login to IMS
                 </h2>
                 <p className="text-gray-600">
-                  Enter your credentials to access the dashboard
+                  Enter your credentials to Login 
                 </p>
               </div>
 
