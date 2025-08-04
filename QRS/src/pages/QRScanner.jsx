@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState } from "react";
 import jsQR from "jsqr";
 import { io } from "socket.io-client";
 import { CheckCircle, RotateCw, Smartphone } from "react-feather";
+const API_URL = import.meta.env.VITE_API_URL;
 
-const socket = io("https://prym-ims.onrender.com", {
+const socket = io(1`${API_URL}`, {
   transports: ["websocket"],
 });
 
