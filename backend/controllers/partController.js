@@ -147,14 +147,14 @@ exports.dispatchPart = async (req, res) => {
         inventoryItem.status = 'used';
 
         // Remove the QR ID from the QR model when dispatching
-        const qrDoc = await QR.findOne({});
-        if (qrDoc && qrDoc.qrId.includes(id)) {
-            qrDoc.qrId = qrDoc.qrId.filter(qrId => qrId !== id);
-            qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - 1);
-            await qrDoc.save();
-        }
+        // const qrDoc = await QR.findOne({});
+        // if (qrDoc && qrDoc.qrId.includes(id)) {
+        //     qrDoc.qrId = qrDoc.qrId.filter(qrId => qrId !== id);
+        //     qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - 1);
+        //     await qrDoc.save();
+        // }
 
-        await part.save();
+        // await part.save();
 
         res.json({
             message: 'Inventory item dispatched successfully',
@@ -428,15 +428,15 @@ exports.bulkRemoveQRIds = async (req, res) => {
             return res.status(404).json({ message: "QR document not found" });
         }
 
-        // Filter out the QR IDs that are being dispatched
-        const originalCount = qrDoc.qrId.length;
-        qrDoc.qrId = qrDoc.qrId.filter(qrId => !qrIds.includes(qrId));
-        const removedCount = originalCount - qrDoc.qrId.length;
+        // // Filter out the QR IDs that are being dispatched
+        // const originalCount = qrDoc.qrId.length;
+        // qrDoc.qrId = qrDoc.qrId.filter(qrId => !qrIds.includes(qrId));
+        // const removedCount = originalCount - qrDoc.qrId.length;
 
-        // Update scanned count
-        qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - removedCount);
+        // // Update scanned count
+        // qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - removedCount);
 
-        await qrDoc.save();
+        // await qrDoc.save();
 
         res.status(200).json({
             message: `${removedCount} QR IDs removed from tracking successfully`,

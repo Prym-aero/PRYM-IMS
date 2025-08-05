@@ -59,6 +59,12 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   }, []);
 
   const handleAddScannedData = async (data) => {
+
+    const isMatched = dispatchData.items.some(
+      (item) => item.materialName === data.part_name && Number(item.quantity) > 0
+
+    );
+
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",
@@ -66,7 +72,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       part_number: data.part_number || "N/A",
       timestamp: new Date(data.date).toLocaleString(),
       date: data.date,
-      status: "Success",
+      status: isMatched ? "Success" : "Mismatch",
       scannedBy: "Scanner",
       dispatchId: dispatchData.allotmentNo,
     };
@@ -75,6 +81,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     const alreadyExists = scannedData.some(
       (item) => item.qrId === formatted.qrId
     );
+
     if (alreadyExists) {
       toast.error("This item has already been scanned.");
       return;
@@ -100,37 +107,42 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     });
 
     // Perform backend update
-    await updateInventoryForDispatch(formatted, dispatchData);
+    await updateInventoryForDispatch(formatted, isMatched);
   };
 
-  const updateInventoryForDispatch = async (item, dispatchInfo) => {
-    try {
-      const res = await axios.post(
-        `${API_URL}/api/ERP/part/${item.part_number}/dispatch/${item.id}`
-      );
+  const updateInventoryForDispatch = async (item, isMatched) => {
+    if (isMatched) {
+      try {
+        const res = await axios.post(
+          `${API_URL}/api/ERP/part/${item.part_number}/dispatch/${item.id}`
+        );
 
-      if (res.status === 200) {
-        const partName = res.data.inventoryItem.part_name;
-        const qrIdRemoved = res.data.qrIdRemoved;
+        if (res.status === 200) {
+          const partName = res.data.inventoryItem.part_name;
+          const qrIdRemoved = res.data.qrIdRemoved;
 
-        if (qrIdRemoved) {
-          toast.success(`${partName} dispatched successfully! QR ID removed from tracking.`);
-        } else {
-          toast.success(`${partName} dispatched successfully!`);
+          if (qrIdRemoved) {
+            toast.success(`${partName} dispatched successfully! QR ID removed from tracking.`);
+          } else {
+            toast.success(`${partName} dispatched successfully!`);
+          }
         }
-      }
 
-      if (res.status === 400) {
-        const partName = res.data.inventoryItem.part_name;
-        toast.warning(`${partName} was already dispatched`);
+        if (res.status === 400) {
+          const partName = res.data.inventoryItem.part_name;
+          toast.warning(`${partName} was already dispatched`);
+        }
+      } catch (err) {
+        if (err.response?.status === 400) {
+          toast.warning("Item was already dispatched");
+        } else {
+          toast.error("Error dispatching item");
+        }
+        console.error("Dispatch error:", err);
       }
-    } catch (err) {
-      if (err.response?.status === 400) {
-        toast.warning("Item was already dispatched");
-      } else {
-        toast.error("Error dispatching item");
-      }
-      console.error("Dispatch error:", err);
+    } else {
+      toast.error("Scanned item does not match the expected part number.");
+      console.warn("Scanned item mismatch:", item);
     }
   };
 
@@ -305,9 +317,8 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
             </h1>
             <p className="text-gray-600 flex gap-1 items-center">
               <span
-                className={`w-[10px] h-[10px] rounded-full ${
-                  connected ? "bg-green-500" : "bg-red-500"
-                }`}
+                className={`w-[10px] h-[10px] rounded-full ${connected ? "bg-green-500" : "bg-red-500"
+                  }`}
               ></span>
               <span>{connected ? "Connected" : "Disconnected"}</span>
             </p>
