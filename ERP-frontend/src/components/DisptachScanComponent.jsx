@@ -61,8 +61,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   const handleAddScannedData = async (data) => {
 
     const isMatched = dispatchData.items.some(
-      (item) => item.materialName === data.part_name && Number(item.quantity) > 0
-
+      (item) => item.materialName === data.part_name 
     );
 
     const formatted = {
