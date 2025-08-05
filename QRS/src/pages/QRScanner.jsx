@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import { CheckCircle, RotateCw, Smartphone } from "react-feather";
 const API_URL = import.meta.env.VITE_API_URL;
 
-const socket = io(1`${API_URL}`, {
+const socket = io(`${API_URL}`, {
   transports: ["websocket"],
 });
 
