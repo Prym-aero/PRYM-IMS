@@ -4,6 +4,8 @@ import QRCodeGenerator from "../components/QRCodeGenerator";
 import ERPMDashboard from "../components/ERPDashboard";
 import ERPQRScanner from "../components/QRScannerCompnent";
 import InventoryDispatchSystem from "../components/InventoryCompnent";
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 import { useUser } from "../context/userContext";
 
 const roleToDefaultTab = {
@@ -58,13 +60,24 @@ const GenerateQRPage = () => {
     }
   };
 
-  // if (!user) {
-  //   return (
-  //     <div className="flex items-center justify-center h-screen bg-gray-50">
-  //       <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-400 border-t-transparent" />
-  //     </div>
-  //   );
-  // }
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        {/* Spinning Circle */}
+        <div className="w-[420px] h-[420px] rounded-full border-[6px] border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin absolute"></div>
+
+        {/* Static Image */}
+        <img
+          src="/PRYM_Aerospace_Logo-02-removebg-preview.png"
+          alt="Loading..."
+          className="w-[300px] h-[200px] object-contain relative z-10"
+        />
+      </div>
+    );
+  }
+
+
+
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
