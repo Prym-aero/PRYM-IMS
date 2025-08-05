@@ -61,8 +61,11 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   const handleAddScannedData = async (data) => {
 
     const isMatched = dispatchData.items.some(
-      (item) => item.materialName === data.part_name 
+      (item) =>
+        item.materialName?.toLowerCase?.() === data.part_name?.toLowerCase?.() &&
+        Number(item.quantity) > 0
     );
+
 
     const formatted = {
       id: data.id || Date.now(),
