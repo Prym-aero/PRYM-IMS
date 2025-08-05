@@ -213,6 +213,7 @@ const ERPQRScanner = () => {
     const alreadyExists = scannedData.some(
       (item) => item.qrId === data.id
     );
+    
     if (alreadyExists) {
       toast.error("This item has already been scanned in this session!");
       return;

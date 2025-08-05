@@ -11,6 +11,8 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   const [scannedData, setScannedData] = useState([]);
   const [connected, setConnected] = useState(false);
 
+
+
   // Initialize with dispatch data
   const [sessionData, setSessionData] = useState({
     sessionId: `DISPATCH-${Math.random()
@@ -62,8 +64,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
     const isMatched = dispatchData.items.some(
       (item) =>
-        item.materialName?.toLowerCase?.() === data.part_name?.toLowerCase?.() &&
-        Number(item.quantity) > 0
+        item.materialName?.toLowerCase?.().trim?.() === data.part_name?.toLowerCase?.().trim?.()
     );
 
 
@@ -89,9 +90,12 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       return;
     }
 
+
+    const status = await updateInventoryForDispatch(formatted, isMatched);
+
     // Update scannedData and recalculate sessionData in one go
     setScannedData((prev) => {
-      const updated = [...prev, formatted];
+      const updated = [...prev, { ...formatted, status: status.status }];
       const newScannedCount = updated.length;
       const newRemaining = sessionData.totalExpected - newScannedCount;
       const newProgress = Math.floor(
@@ -109,10 +113,11 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     });
 
     // Perform backend update
-    await updateInventoryForDispatch(formatted, isMatched);
+
   };
 
   const updateInventoryForDispatch = async (item, isMatched) => {
+    console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
     if (isMatched) {
       try {
         const res = await axios.post(
@@ -128,19 +133,24 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
           } else {
             toast.success(`${partName} dispatched successfully!`);
           }
+
+          return { success: true, status: res.data.status };
         }
 
         if (res.status === 400) {
           const partName = res.data.inventoryItem.part_name;
-          toast.warning(`${partName} was already dispatched`);
+          toast(`⚠️ ${partName} was already dispatched`);
+          return { success: false, status: res.data.status };
         }
       } catch (err) {
         if (err.response?.status === 400) {
-          toast.warning("Item was already dispatched");
+          toast("⚠️ Item was already dispatched");
+          return { success: false, status: err.response.data.status };
         } else {
           toast.error("Error dispatching item");
         }
         console.error("Dispatch error:", err);
+        return { success: false, status: err.response?.data?.status || "error" }
       }
     } else {
       toast.error("Scanned item does not match the expected part number.");
@@ -151,6 +161,11 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   // Generate dispatch PDF
   const generateDispatchPDF = (dispatchInfo, scannedItems) => {
     try {
+      const filteredScannedItems = scannedItems.filter(
+        (item) => item.status === "Success"
+      );
+
+
       const doc = new jsPDF();
 
       // Header
@@ -229,7 +244,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
         // Draw a line
         doc.line(14, yPosition - 5, 200, yPosition - 5);
 
-        scannedItems.forEach((item, index) => {
+        filteredScannedItems.forEach((item, index) => {
           if (yPosition > 270) { // Start new page if needed
             doc.addPage();
             yPosition = 20;
@@ -256,15 +271,15 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       formData.append("pdf", pdfBlob, fileName);
       formData.append("allotmentNo", dispatchInfo.allotmentNo);
 
-      axios
-        .post(`${API_URL}/api/ERP/disptach/upload-pdf`, formData)
-        .then(() => {
-          toast.success("Dispatch PDF uploaded to server successfully!");
-        })
-        .catch((err) => {
-          console.error("PDF upload failed:", err);
-          toast.error("PDF generated but server upload failed.");
-        });
+      // axios
+      //   .post(`${API_URL}/api/ERP/disptach/upload-pdf`, formData)
+      //   .then(() => {
+      //     toast.success("Dispatch PDF uploaded to server successfully!");
+      //   })
+      //   .catch((err) => {
+      //     console.error("PDF upload failed:", err);
+      //     toast.error("PDF generated but server upload failed.");
+      //   });
 
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -278,16 +293,16 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       generateDispatchPDF(dispatchData, scannedData);
 
       // Bulk remove QR IDs from tracking
-      const qrIds = scannedData.map(item => item.qrId);
-      if (qrIds.length > 0) {
-        const res = await axios.post(`${API_URL}/api/ERP/qr/bulk-remove`, {
-          qrIds: qrIds
-        });
+      // const qrIds = scannedData.map(item => item.qrId);
+      // if (qrIds.length > 0) {
+      //   const res = await axios.post(`${API_URL}/api/ERP/qr/bulk-remove`, {
+      //     qrIds: qrIds
+      //   });
 
-        if (res.status === 200) {
-          toast.success(`Dispatch completed! ${res.data.removedCount} QR IDs removed from tracking.`);
-        }
-      }
+      //   if (res.status === 200) {
+      //     toast.success(`Dispatch completed! ${res.data.removedCount} QR IDs removed from tracking.`);
+      //   }
+      // }
 
       onComplete({
         dispatchId: dispatchData.allotmentNo,

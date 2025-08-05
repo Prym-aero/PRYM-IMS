@@ -125,41 +125,36 @@ exports.addToInventory = async (req, res) => {
 exports.dispatchPart = async (req, res) => {
     const { partNumber, id } = req.params;
 
+
     try {
         const part = await Part.findOne({ part_number: partNumber });
 
         if (!part) {
-            return res.status(404).json({ message: 'Part not found' });
+
+            return res.status(404).json({ message: 'Part not found', status: 'error' });
+
         }
 
         // Find the inventory item by `id`
         const inventoryItem = part.inventory.find(item => item.id === id);
 
         if (!inventoryItem) {
-            return res.status(404).json({ message: 'Inventory item not found' });
+            return res.status(404).json({ message: 'Inventory item not found', status: 'Not Found' });
         }
 
         if (inventoryItem.status === 'used') {
-            return res.status(400).json({ message: 'Item is already dispatched' });
+            return res.status(400).json({ message: 'Item is already dispatched', status: 'dispatched' });
         }
 
         // Update the status to 'used'
         inventoryItem.status = 'used';
 
-        // Remove the QR ID from the QR model when dispatching
-        // const qrDoc = await QR.findOne({});
-        // if (qrDoc && qrDoc.qrId.includes(id)) {
-        //     qrDoc.qrId = qrDoc.qrId.filter(qrId => qrId !== id);
-        //     qrDoc.scannedCount = Math.max(0, qrDoc.scannedCount - 1);
-        //     await qrDoc.save();
-        // }
-
-        // await part.save();
+        await part.save();
 
         res.json({
             message: 'Inventory item dispatched successfully',
             inventoryItem,
-            qrIdRemoved: qrDoc && qrDoc.qrId.includes(id) ? false : true
+            status: 'Success'
         });
     } catch (err) {
         console.error(err);
