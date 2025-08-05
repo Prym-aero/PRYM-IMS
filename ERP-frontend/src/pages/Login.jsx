@@ -50,7 +50,7 @@ export default function LoginPage() {
   };
 
   const handleITSupport = () => {
-    // Handle IT support contact
+    //  window.location.href = "tel:+918329181694";
   };
 
   const toggleDarkMode = () => {
