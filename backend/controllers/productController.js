@@ -4,6 +4,8 @@ exports.addProduct = async (req, res) => {
     try {
         const { product_name, parts } = req.body;
 
+        console.log("Received product data:", req.body);
+
         if (!product_name || !Array.isArray(parts) || parts.length === 0) {
             return res.status(400).json({ message: "Missing required product data." });
         }

@@ -26,7 +26,7 @@ const QRCodeGenerator = () => {
 
   const [productForm, setProductForm] = useState({
     product_name: "",
-    parts: [{ part_name: "", quantity: 1 }],
+    parts: [{ part_name: "", quantity: 1, category: "", categoryName: "" }],
   });
 
   const [productsList, setProductsList] = useState([]);
@@ -104,7 +104,7 @@ const QRCodeGenerator = () => {
       toast.success("Product added successfully!");
       setProductForm({
         product_name: "",
-        parts: [{ part_name: "", quantity: 1 }],
+        parts: [{ part_name: "", quantity: 1, category: "", categoryName: "" }],
       });
       fetchProducts();
       setIsAddingProduct(false);
@@ -397,7 +397,7 @@ const QRCodeGenerator = () => {
                 setIsAddingProduct(false);
                 setProductForm({
                   product_name: "",
-                  parts: [{ part_name: "", quantity: 1 }],
+                  parts: [{ part_name: "", quantity: 1, category: "", categoryName: "" }],
                 });
               }}
             >
@@ -449,6 +449,28 @@ const QRCodeGenerator = () => {
                       setProductForm({ ...productForm, parts: updated });
                     }}
                   />
+                  <input
+                    type="text"
+                    className="border p-2 rounded w-1/2"
+                    placeholder="Category"
+                    value={p.category}
+                    onChange={(e) => {
+                      const updated = [...productForm.parts];
+                      updated[index].category = e.target.value;
+                      setProductForm({ ...productForm, parts: updated });
+                    }}
+                  />
+                  <input
+                    type="text"
+                    className="border p-2 rounded w-1/2"
+                    placeholder="Category Name"
+                    value={p.categoryName}
+                    onChange={(e) => {
+                      const updated = [...productForm.parts];
+                      updated[index].categoryName = e.target.value;
+                      setProductForm({ ...productForm, parts: updated });
+                    }}
+                  />
                 </div>
               ))}
 
@@ -459,7 +481,7 @@ const QRCodeGenerator = () => {
                     ...productForm,
                     parts: [
                       ...productForm.parts,
-                      { part_name: "", quantity: 1 },
+                      { part_name: "", quantity: 1, category: "", categoryName: "" },
                     ],
                   })
                 }
