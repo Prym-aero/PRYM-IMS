@@ -31,6 +31,12 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       roles: ["admin"],
     },
     {
+      id: "addProduct",
+      label: "Add Product",
+      icon: LayoutDashboard,
+      roles: ["admin", "addProduct"],
+    },
+    {
       id: "generate",
       label: "Generate QR",
       icon: QrCode,
@@ -73,9 +79,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center px-6 py-3 text-left hover:bg-sky-400 transition-colors ${
-                  activeTab === item.id ? "bg-sky-600" : ""
-                }`}
+                className={`w-full flex items-center px-6 py-3 text-left hover:bg-sky-400 transition-colors ${activeTab === item.id ? "bg-sky-600" : ""
+                  }`}
               >
                 <Icon className="mr-3 h-5 w-5" />
                 {item.label}

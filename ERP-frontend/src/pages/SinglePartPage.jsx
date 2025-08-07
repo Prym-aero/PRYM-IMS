@@ -205,7 +205,7 @@ const SinglePartPage = () => {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="p-8 bg-gray-50 min-h-screen max-w-[900px] flex flex-col mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Part Details</h1>
@@ -231,7 +231,7 @@ const SinglePartPage = () => {
 
       {/* Part Info Card */}
       <div className="bg-white p-6 rounded-xl shadow mb-6">
-        <div className="flex items-center space-x-4 mb-4">
+        <div className="flex items-center space-x-4 mb-4 ">
           <div className="relative">
             <img
               src={
@@ -258,12 +258,15 @@ const SinglePartPage = () => {
             </label>
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-2xl font-bold text-gray-800">
               {part?.part_name || "Aluminum Gear Housing"}
+            </h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {part?.part_number || "Aluminum Gear Housing"}
             </h2>
           </div>
         </div>
-        <p className="text-gray-700 text-sm">
+        <p className="text-gray-700 text-sm font-semibold mb-2">
           {part?.part_description ||
             "Precision-machined aluminum housing used for general automation. Thiscomponent provides structural support while maintaining optimal weightcharacteristics for aerospace applications. The part is designed towithstand extreme temperature shifts and vibration conditions. Supporting documentation and specifications are available fordownload."}
         </p>
@@ -345,7 +348,7 @@ const SinglePartPage = () => {
           ))}
 
           {/* Show placeholder images if less than 2 images */}
-          {(!part?.images || part.images.length < 2) && (
+          {/* {(!part?.images || part.images.length < 2) && (
             <>
               {!part?.images?.[0] && (
                 <img
@@ -362,7 +365,7 @@ const SinglePartPage = () => {
                 />
               )}
             </>
-          )}
+          )} */}
 
           {/* Add Image Button */}
           <label className="border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 text-sm cursor-pointer hover:border-blue-400 hover:text-blue-400 transition-colors h-54">
@@ -416,7 +419,7 @@ const SinglePartPage = () => {
         </details>
       </div>
 
-      {/* Related Parts */}
+      {/* Related Parts
       <div className="bg-white p-6 rounded-xl shadow mb-6">
         <h3 className="text-lg font-semibold mb-4">Related Parts</h3>
         <div className="flex flex-wrap gap-4 text-sm text-blue-600">
@@ -428,42 +431,9 @@ const SinglePartPage = () => {
           </div>
           <div className="bg-gray-100 px-3 py-2 rounded-lg">Drive Assembly</div>
         </div>
-      </div>
-
-      {/* Revision History */}
-      {/* <div className="bg-white p-6 rounded-xl shadow">
-        <h3 className="text-lg font-semibold mb-4">Revision History</h3>
-        <table className="w-full text-sm text-gray-700">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2">#</th>
-              <th className="text-left py-2">Date</th>
-              <th className="text-left py-2">Revision By</th>
-              <th className="text-left py-2">Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b">
-              <td>1.3</td>
-              <td>Jul 10, 2025</td>
-              <td>J. Martinez</td>
-              <td>Updated CAD Model and dimension specs</td>
-            </tr>
-            <tr className="border-b">
-              <td>1.2</td>
-              <td>Apr 22, 2025</td>
-              <td>A. Williams</td>
-              <td>Added tolerance details</td>
-            </tr>
-            <tr>
-              <td>1.1</td>
-              <td>Feb 16, 2025</td>
-              <td>C. Allen</td>
-              <td>Initial Release</td>
-            </tr>
-          </tbody>
-        </table>
       </div> */}
+
+
 
       {/* Edit Modal */}
       {showEditModal && (
@@ -631,11 +601,10 @@ const SinglePartPage = () => {
               <button
                 onClick={handleSaveChanges}
                 disabled={isLoading}
-                className={`px-4 py-2 text-white rounded-lg flex items-center ${
-                  isLoading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }`}
+                className={`px-4 py-2 text-white rounded-lg flex items-center ${isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+                  }`}
               >
                 {isLoading ? (
                   <>

@@ -10,6 +10,7 @@ import { useUser } from "../context/userContext";
 
 const roleToDefaultTab = {
   admin: "dashboard",
+  addProduct: "addProduct",
   adder: "generate",
   scanner: "scan",
   inventory: "inventory",
@@ -17,6 +18,7 @@ const roleToDefaultTab = {
 
 const tabAccess = {
   dashboard: ["admin"],
+  addProduct: ["admin", "addProduct"],
   generate: ["admin", "adder"],
   scan: ["admin", "scanner"],
   inventory: ["admin", "inventory"],
@@ -49,6 +51,8 @@ const GenerateQRPage = () => {
     switch (activeTab) {
       case "dashboard":
         return <ERPMDashboard />;
+      case "addProduct":
+        return <div>this is the addprocut page</div>
       case "generate":
         return <QRCodeGenerator />;
       case "scan":

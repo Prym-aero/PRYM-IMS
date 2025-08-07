@@ -213,7 +213,7 @@ const ERPQRScanner = () => {
     const alreadyExists = scannedData.some(
       (item) => item.qrId === data.id
     );
-    
+
     if (alreadyExists) {
       toast.error("This item has already been scanned in this session!");
       return;
@@ -513,7 +513,7 @@ const ERPQRScanner = () => {
                       className="w-full p-2 border rounded-lg"
                     />
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="text-sm text-gray-600">Part Image</label>
                     {isImageUploaded ? (
                       <>
@@ -534,7 +534,7 @@ const ERPQRScanner = () => {
                         />
                       </>
                     )}
-                  </div>
+                  </div> */}
                 </div>
                 <button
                   onClick={() => {
@@ -555,10 +555,10 @@ const ERPQRScanner = () => {
                       toast.error("Please enter Operator Name");
                       return;
                     }
-                    if (!sessionData.partImage) {
-                      toast.error("Please upload Part Image");
-                      return;
-                    }
+                    // if (!sessionData.partImage) {
+                    //   toast.error("Please upload Part Image");
+                    //   return;
+                    // }
                     if (!sessionData.totalExpected || sessionData.totalExpected <= 0) {
                       toast.error("Please enter a valid Total Expected quantity");
                       return;
@@ -661,8 +661,8 @@ const ERPQRScanner = () => {
                     <button
                       onClick={handleCompleteScanning}
                       className={`w-full py-2 px-4 rounded-lg flex items-center justify-center font-medium ${scannedData.filter(item => item.status === "Success").length >= sessionData.totalExpected && sessionData.totalExpected > 0
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                         }`}
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />

@@ -270,9 +270,7 @@ const QRCodeGenerator = () => {
   return (
     <>
       <div className="flex-1 p-6 bg-gray-50">
-        {/* Header */}
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
@@ -596,8 +594,8 @@ const QRCodeGenerator = () => {
                 onClick={generateQRCodes}
                 disabled={isGenerating || !selectedPartId || !quantity}
                 className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors duration-200 flex items-center justify-center ${isGenerating || !selectedPartId || !quantity
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
                   }`}
               >
                 {isGenerating ? (
@@ -695,8 +693,8 @@ const QRCodeGenerator = () => {
                     onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                     disabled={currentPage === 1}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                       }`}
                   >
                     Previous
@@ -719,8 +717,8 @@ const QRCodeGenerator = () => {
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
                           className={`px-3 py-2 rounded-lg font-medium transition-colors duration-200 ${currentPage === pageNum
-                              ? "bg-blue-500 text-white"
-                              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            ? "bg-blue-500 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
                           {pageNum}
@@ -732,8 +730,8 @@ const QRCodeGenerator = () => {
                     onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                       }`}
                   >
                     Next

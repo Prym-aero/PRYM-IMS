@@ -1,17 +1,59 @@
+const updateInventoryForDispatch = async (item, isMatched) => {
+  console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
+
+  // Mock API call - replace with actual implementation
+  if (isMatched) {
+    try {
+      // Simulate API call
+      const mockResponse = {
+        status: 200,
+        data: {
+          inventoryItem: { part_name: item.part_name },
+          qrIdRemoved: true,
+          status: "Success"
+        }
+      };
+
+    } catch (err) {
+      if (err.response?.status === 400) {
+        toast("⚠️ Item was already dispatched");
+        return { success: false, status: err.response.data.status };
+      } else {
+        toast.error("Error dispatching item");
+      }
+      console.error("Dispatch error:", err);
+      return { success: false, status: err.response?.data?.status || "error" };
+    }
+  }
+};
+
 import React, { useState, useEffect } from "react";
+import { CheckCircle, AlertTriangle, X, RefreshCw, Package, User, Calendar, MapPin } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 import axios from "axios";
-import { CheckCircle, AlertTriangle, X, RefreshCw } from "lucide-react";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-import { Toaster, toast } from "react-hot-toast";
+import { jsPDF } from "jspdf";
+import 'jspdf-autotable';
+
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
+
 
 const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   const [scannedData, setScannedData] = useState([]);
   const [connected, setConnected] = useState(false);
 
-
+  // Track individual part quantities
+  const [partQuantities, setPartQuantities] = useState(() => {
+    const quantities = {};
+    dispatchData.items.forEach(item => {
+      quantities[item.materialName.toLowerCase().trim()] = {
+        expected: Number(item.quantity),
+        scanned: 0,
+        remaining: Number(item.quantity)
+      };
+    });
+    return quantities;
+  });
 
   // Initialize with dispatch data
   const [sessionData, setSessionData] = useState({
@@ -31,12 +73,13 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     ),
     progress: 0,
     partName: dispatchData.items[0]?.materialName || "",
-    part_number: dispatchData.items[0]?.materialName || "", // You might want to adjust this
+    part_number: dispatchData.items[0]?.materialName || "",
     purpose: "Dispatch",
     operationDate: dispatchData.date,
     operatorName: dispatchData.preparedBy,
   });
 
+  // Mock socket connection for demo
   // Socket connection (same as your QRScanner)
   useEffect(() => {
     const socket = io(`${API_URL}`, {
@@ -60,13 +103,36 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     };
   }, []);
 
-  const handleAddScannedData = async (data) => {
 
-    const isMatched = dispatchData.items.some(
-      (item) =>
-        item.materialName?.toLowerCase?.().trim?.() === data.part_name?.toLowerCase?.().trim?.()
+  const handleAddScannedData = async (data) => {
+    const scannedPartName = data.part_name?.toLowerCase?.().trim?.();
+
+    // Check if part exists in expected items
+    const expectedItem = dispatchData.items.find(
+      (item) => item.materialName?.toLowerCase?.().trim?.() === scannedPartName
     );
 
+    if (!expectedItem) {
+      alert(`"${data.part_name}" is not in the expected items list for this dispatch.`);
+      return;
+    }
+
+    // Check if this specific item was already scanned
+    const alreadyScanned = scannedData.some(
+      (item) => item.qrId === data.id
+    );
+
+    if (alreadyScanned) {
+      alert("This specific item has already been scanned.");
+      return;
+    }
+
+    // Check quantity limit for this part
+    const currentPartQuantity = partQuantities[scannedPartName];
+    if (currentPartQuantity.scanned >= currentPartQuantity.expected) {
+      alert(`Cannot scan more ${expectedItem.materialName}. Expected quantity (${currentPartQuantity.expected}) already reached.`);
+      return;
+    }
 
     const formatted = {
       id: data.id || Date.now(),
@@ -75,27 +141,19 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       part_number: data.part_number || "N/A",
       timestamp: new Date(data.date).toLocaleString(),
       date: data.date,
-      status: isMatched ? "Success" : "Mismatch",
+      status: "Success",
       scannedBy: "Scanner",
       dispatchId: dispatchData.allotmentNo,
     };
 
-    // Prevent duplicate scans
-    const alreadyExists = scannedData.some(
-      (item) => item.qrId === formatted.qrId
-    );
+    // Update inventory for dispatch
+    const status = await updateInventoryForDispatch(formatted, true);
 
-    if (alreadyExists) {
-      toast.error("This item has already been scanned.");
-      return;
-    }
-
-
-    const status = await updateInventoryForDispatch(formatted, isMatched);
-
-    // Update scannedData and recalculate sessionData in one go
+    // Update scanned data and part quantities
     setScannedData((prev) => {
       const updated = [...prev, { ...formatted, status: status.status }];
+
+      // Update session data
       const newScannedCount = updated.length;
       const newRemaining = sessionData.totalExpected - newScannedCount;
       const newProgress = Math.floor(
@@ -112,8 +170,15 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       return updated;
     });
 
-    // Perform backend update
-
+    // Update part quantities
+    setPartQuantities(prev => ({
+      ...prev,
+      [scannedPartName]: {
+        ...prev[scannedPartName],
+        scanned: prev[scannedPartName].scanned + 1,
+        remaining: prev[scannedPartName].remaining - 1
+      }
+    }));
   };
 
   const updateInventoryForDispatch = async (item, isMatched) => {
@@ -165,7 +230,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
         (item) => item.status === "Success"
       );
 
-
       const doc = new jsPDF();
 
       // Header
@@ -201,7 +265,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
         item.status || "Success"
       ]);
 
-      // Use autoTable - make sure it's available
       try {
         if (doc.autoTable && typeof doc.autoTable === 'function') {
           doc.autoTable({
@@ -241,11 +304,10 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
         doc.text("Status", 170, yPosition);
         yPosition += 10;
 
-        // Draw a line
         doc.line(14, yPosition - 5, 200, yPosition - 5);
 
         filteredScannedItems.forEach((item, index) => {
-          if (yPosition > 270) { // Start new page if needed
+          if (yPosition > 270) {
             doc.addPage();
             yPosition = 20;
           }
@@ -260,26 +322,8 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       }
 
       const fileName = `Dispatch_${dispatchInfo.allotmentNo}_${new Date().toISOString().split('T')[0]}.pdf`;
-
-      // Save PDF to user device
       doc.save(fileName);
       toast.success("Dispatch PDF generated and downloaded successfully!");
-
-      // Convert to blob and send to server
-      const pdfBlob = doc.output("blob");
-      const formData = new FormData();
-      formData.append("pdf", pdfBlob, fileName);
-      formData.append("allotmentNo", dispatchInfo.allotmentNo);
-
-      // axios
-      //   .post(`${API_URL}/api/ERP/disptach/upload-pdf`, formData)
-      //   .then(() => {
-      //     toast.success("Dispatch PDF uploaded to server successfully!");
-      //   })
-      //   .catch((err) => {
-      //     console.error("PDF upload failed:", err);
-      //     toast.error("PDF generated but server upload failed.");
-      //   });
 
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -289,20 +333,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
   const handleCompleteDispatch = async () => {
     try {
-      // Generate PDF before completing
       generateDispatchPDF(dispatchData, scannedData);
-
-      // Bulk remove QR IDs from tracking
-      // const qrIds = scannedData.map(item => item.qrId);
-      // if (qrIds.length > 0) {
-      //   const res = await axios.post(`${API_URL}/api/ERP/qr/bulk-remove`, {
-      //     qrIds: qrIds
-      //   });
-
-      //   if (res.status === 200) {
-      //     toast.success(`Dispatch completed! ${res.data.removedCount} QR IDs removed from tracking.`);
-      //   }
-      // }
 
       onComplete({
         dispatchId: dispatchData.allotmentNo,
@@ -313,7 +344,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       console.error("Error completing dispatch:", err);
       toast.error("Error completing dispatch");
 
-      // Still complete the dispatch even if QR removal fails
       onComplete({
         dispatchId: dispatchData.allotmentNo,
         scannedItems: scannedData,
@@ -324,7 +354,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
 
   return (
     <>
-      {" "}
       <div className="fixed inset-0 z-50 bg-white overflow-y-auto p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -334,8 +363,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
             </h1>
             <p className="text-gray-600 flex gap-1 items-center">
               <span
-                className={`w-[10px] h-[10px] rounded-full ${connected ? "bg-green-500" : "bg-red-500"
-                  }`}
+                className={`w-[10px] h-[10px] rounded-full ${connected ? "bg-green-500" : "bg-red-500"}`}
               ></span>
               <span>{connected ? "Connected" : "Disconnected"}</span>
             </p>
@@ -362,6 +390,89 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
             >
               Complete Dispatch
             </button>
+          </div>
+        </div>
+
+        {/* Dispatch Information Card */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            Dispatch Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-500" />
+              <div>
+                <p className="text-sm text-gray-600">Department</p>
+                <p className="font-medium">{dispatchData.department}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <div>
+                <p className="text-sm text-gray-600">Date</p>
+                <p className="font-medium">{new Date(dispatchData.date).toLocaleDateString()}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-gray-500" />
+              <div>
+                <p className="text-sm text-gray-600">Dispatch To</p>
+                <p className="font-medium">{dispatchData.dispatchTo}</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div>
+              <p className="text-sm text-gray-600">Allotment No</p>
+              <p className="font-medium">{dispatchData.allotmentNo}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Prepared By</p>
+              <p className="font-medium">{dispatchData.preparedBy}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Reporting To</p>
+              <p className="font-medium">{dispatchData.reportingTo}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Expected Parts List */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Expected Parts</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {dispatchData.items.map((item, index) => {
+              const partKey = item.materialName.toLowerCase().trim();
+              const quantity = partQuantities[partKey];
+              return (
+                <div key={index} className="border rounded-lg p-4">
+                  <h3 className="font-medium text-gray-800">{item.materialName}</h3>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Expected: {quantity.expected}</span>
+                    <span className="text-sm text-gray-600">Scanned: {quantity.scanned}</span>
+                  </div>
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${quantity.scanned === quantity.expected
+                        ? 'bg-green-500'
+                        : quantity.scanned > 0
+                          ? 'bg-blue-500'
+                          : 'bg-gray-300'
+                        }`}
+                      style={{ width: `${Math.min((quantity.scanned / quantity.expected) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <div className="mt-1 text-xs text-right">
+                    {quantity.remaining > 0 ? (
+                      <span className="text-orange-600">{quantity.remaining} remaining</span>
+                    ) : (
+                      <span className="text-green-600">Complete</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -445,6 +556,9 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
                     QR ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Part Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Part Number
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -460,14 +574,14 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
                   <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{item.qrId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{item.part_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{item.part_number}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{item.timestamp}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {item.part_number}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {item.timestamp}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status === 'Success'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                        }`}>
                         {item.status}
                       </span>
                     </td>
