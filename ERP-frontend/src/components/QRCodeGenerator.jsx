@@ -516,17 +516,54 @@ const QRCodeGenerator = () => {
               </select>
 
               {selectedProductData && (
-                <div className="mt-4 border p-4 rounded bg-gray-50">
-                  <h3 className="text-lg font-bold mb-2">
-                    {selectedProductData.product_name}
-                  </h3>
-                  <ul className="list-disc list-inside">
-                    {selectedProductData.parts.map((p, i) => (
-                      <li key={i}>
-                        {p.part_name} - Quantity: {p.quantity}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="mt-4 border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-gray-200 bg-white">
+                    <h3 className="text-lg font-semibold text-gray-800 truncate">
+                      {selectedProductData.product_name}
+                    </h3>
+                  </div>
+
+                  {/* Parts List */}
+                  <div className="p-4">
+                    <div className="space-y-2">
+                      {selectedProductData.parts.map((p, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-100 hover:border-gray-200 transition-colors"
+                        >
+                          {/* Left side - Part info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-gray-600 bg-gray-200 rounded-full flex-shrink-0">
+                                {i + 1}
+                              </span>
+                              <span className="font-medium text-gray-800 truncate">
+                                {p.part_name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                                {p.categoryName}
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-500">
+                                {p.category}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right side - Quantity */}
+                          <div className="flex-shrink-0 ml-4">
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
+                              Qty: {p.quantity}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </>
