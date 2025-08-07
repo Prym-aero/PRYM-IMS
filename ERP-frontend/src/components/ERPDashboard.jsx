@@ -146,7 +146,7 @@ const ERPMDashboard = () => {
         <div className="p-6">
           <div className="grid grid-cols-4 gap-6 mb-8">
             {/* Total Unique Parts */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">
@@ -163,7 +163,7 @@ const ERPMDashboard = () => {
                   <Package className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Total Parts in Stock */}
             <div className="bg-white rounded-lg shadow-sm p-6">
