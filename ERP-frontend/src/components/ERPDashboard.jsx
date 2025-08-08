@@ -14,6 +14,7 @@ import {
   TrendingUp,
   TrendingDown,
   RefreshCw,
+  Info,
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -80,20 +81,41 @@ const ERPMDashboard = () => {
     fetchDailyInventory();
   }, []);
 
- 
+
 
   // State variables
-
   const [partsPerPage] = useState(5); // You can change this number
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Filter parts based on search term
-  const filteredParts = parts.filter(
-    (part) =>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        {/* Spinning Circle */}
+        <div className="w-[320px] h-[320px] rounded-full border-[6px] border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin absolute"></div>
+
+        {/* Static Image */}
+        <img
+          src="/PRYM_Aerospace_Logo-02-removebg-preview.png"
+          alt="Loading..."
+          className="w-[300px] h-[200px] object-contain relative z-10"
+        />
+      </div>
+    );
+  }
+
+  // Filter parts based on search term and category
+  const filteredParts = parts.filter((part) => {
+    const matchesSearch =
       part.part_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      part.part_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      part.organization.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      part.part_number.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory =
+      selectedCategory === "all" ||
+      part.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
 
   // Get current parts
   const indexOfLastPart = currentPage * partsPerPage;
@@ -230,11 +252,10 @@ const ERPMDashboard = () => {
                       <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
                         <TrendingUp className="w-6 h-6 text-white" />
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        dailyInventory.isOpened
-                          ? 'bg-green-500 text-white'
-                          : 'bg-yellow-500 text-white'
-                      }`}>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${dailyInventory.isOpened
+                        ? 'bg-green-500 text-white'
+                        : 'bg-yellow-500 text-white'
+                        }`}>
                         {dailyInventory.isOpened ? '✅ Opened' : '⏳ Pending'}
                       </div>
                     </div>
@@ -251,11 +272,10 @@ const ERPMDashboard = () => {
                       <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                         <Package className="w-6 h-6 text-white" />
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        dailyInventory.isClosed
-                          ? 'bg-red-500 text-white'
-                          : 'bg-blue-500 text-white'
-                      }`}>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${dailyInventory.isClosed
+                        ? 'bg-red-500 text-white'
+                        : 'bg-blue-500 text-white'
+                        }`}>
                         {dailyInventory.isClosed ? '🔒 Closed' : '🔄 Live'}
                       </div>
                     </div>
@@ -323,14 +343,29 @@ const ERPMDashboard = () => {
               <h3 className="text-lg font-semibold text-gray-800">
                 Parts Inventory
               </h3>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search parts..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="flex items-center space-x-4">
+                {/* Category Filter */}
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="mechanical">Mechanical</option>
+                  <option value="electrical">Electrical</option>
+                  <option value="general">General</option>
+                </select>
+
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search parts..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -339,31 +374,29 @@ const ERPMDashboard = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Organization
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Part Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Part Number.
+                      Part Number
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Quantity
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
+
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date Added
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentParts.map((item) => (
                     <tr key={item._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.organization}
-                      </td>
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium cursor-pointer"
                         onClick={() => navigate(`/part/${item._id}`)}
@@ -373,6 +406,16 @@ const ERPMDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.part_number}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${item.category === 'mechanical' ? 'bg-blue-100 text-blue-800' :
+                            item.category === 'electrical' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}
+                        >
+                          {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'General'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {
                           item.inventory.filter(
@@ -380,19 +423,22 @@ const ERPMDashboard = () => {
                           ).length
                         }
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800`}
-                        >
-                          {item.status || "in-stock"}
-                        </span>
-                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {new Date(item.date).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "long",
                           year: "numeric",
                         })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <button
+                          onClick={() => navigate(`/part/${item._id}`)}
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                          title="View part details"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -411,11 +457,10 @@ const ERPMDashboard = () => {
                 <button
                   onClick={() => paginate(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 text-sm ${
-                    currentPage === 1
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-3 py-1 text-sm ${currentPage === 1
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   Previous
                 </button>
@@ -424,11 +469,10 @@ const ERPMDashboard = () => {
                   <button
                     key={number}
                     onClick={() => paginate(number)}
-                    className={`px-3 py-1 text-sm ${
-                      currentPage === number
-                        ? "bg-blue-500 text-white rounded"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`px-3 py-1 text-sm ${currentPage === number
+                      ? "bg-blue-500 text-white rounded"
+                      : "text-gray-500 hover:text-gray-700"
+                      }`}
                   >
                     {number}
                   </button>
@@ -437,11 +481,10 @@ const ERPMDashboard = () => {
                 <button
                   onClick={() => paginate(currentPage + 1)}
                   disabled={currentPage === pageNumbers.length}
-                  className={`px-3 py-1 text-sm ${
-                    currentPage === pageNumbers.length
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-3 py-1 text-sm ${currentPage === pageNumbers.length
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   Next
                 </button>

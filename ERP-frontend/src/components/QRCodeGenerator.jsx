@@ -78,41 +78,41 @@ const QRCodeGenerator = () => {
 
   const handlePartChange = (e) => {
     setPartForm({ ...partForm, [e.target.name]: e.target.value });
-  };
+  }; 
 
   // 🔘 Add new part to backend
-  const addNewPart = async () => {
-    const { part_name, part_number } = partForm;
-    if (!part_name || !part_number) {
-      toast("Please fill all part fields.");
-      return;
-    }
+  // const addNewPart = async () => {
+  //   const { part_name, part_number } = partForm;
+  //   if (!part_name || !part_number) {
+  //     toast("Please fill all part fields.");
+  //     return;
+  //   }
 
-    try {
-      await axios.post(`${API_URL}/api/ERP/part`, partForm);
-      toast.success("Part added successfully!");
-      setPartForm({ part_name: "", part_number: "" });
-      fetchParts();
-    } catch (err) {
-      toast.error("Failed to add part.");
-    }
-  };
+  //   try {
+  //     await axios.post(`${API_URL}/api/ERP/part`, partForm);
+  //     toast.success("Part added successfully!");
+  //     setPartForm({ part_name: "", part_number: "" });
+  //     fetchParts();
+  //   } catch (err) {
+  //     toast.error("Failed to add part.");
+  //   }
+  // };
 
-  const addNewProduct = async () => {
-    try {
-      await axios.post(`${API_URL}/api/ERP/product`, productForm);
-      toast.success("Product added successfully!");
-      setProductForm({
-        product_name: "",
-        parts: [{ part_name: "", quantity: 1, category: "", categoryName: "" }],
-      });
-      fetchProducts();
-      setIsAddingProduct(false);
-    } catch (err) {
-      console.error("Product creation failed", err);
-      toast.error("Error adding product");
-    }
-  };
+  // const addNewProduct = async () => {
+  //   try {
+  //     await axios.post(`${API_URL}/api/ERP/product`, productForm);
+  //     toast.success("Product added successfully!");
+  //     setProductForm({
+  //       product_name: "",
+  //       parts: [{ part_name: "", quantity: 1, category: "", categoryName: "" }],
+  //     });
+  //     fetchProducts();
+  //     setIsAddingProduct(false);
+  //   } catch (err) {
+  //     console.error("Product creation failed", err);
+  //     toast.error("Error adding product");
+  //   }
+  // };
 
   // 🔁 Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;

@@ -347,34 +347,100 @@ const QCComponent = () => {
         </div>
       </div>
 
-      {/* Current Stats */}
+      {/* Enhanced Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Parts Stats */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg p-6 border border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Parts</h3>
               <p className="text-3xl font-bold text-green-600">{parts.length}</p>
               <p className="text-sm text-gray-600 mt-1">Parts in system</p>
             </div>
-            <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-              <Package className="w-8 h-8 text-green-600" />
+            <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Package className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
 
         {/* Products Stats */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-lg p-6 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Products</h3>
               <p className="text-3xl font-bold text-blue-600">{products.length}</p>
               <p className="text-sm text-gray-600 mt-1">Products in system</p>
             </div>
-            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <FileText className="w-8 h-8 text-white" />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Products List Section */}
+      <div className="bg-white rounded-xl shadow-lg mb-8 border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Products List</h3>
+                <p className="text-sm text-gray-600">Manage your product catalog</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((product) => (
+                <div key={product._id} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-800 mb-1">{product.product_name}</h4>
+                      <p className="text-sm text-gray-600 mb-2">{product.product_model || 'No model specified'}</p>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        product.category === 'mechanical' ? 'bg-blue-100 text-blue-800' :
+                        product.category === 'electrical' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'General'}
+                      </span>
+                    </div>
+                    {product.product_image && (
+                      <img
+                        src={product.product_image}
+                        alt={product.product_name}
+                        className="w-12 h-12 object-cover rounded-lg border border-gray-300"
+                      />
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    <p><strong>Parts:</strong> {product.parts?.length || 0} components</p>
+                    <p><strong>Created:</strong> {new Date(product.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-gray-400" />
+              </div>
+              <h4 className="text-lg font-medium text-gray-800 mb-2">No Products Yet</h4>
+              <p className="text-gray-600 mb-4">Start by creating your first product</p>
+              <button
+                onClick={() => setShowAddProductModal(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+              >
+                Add First Product
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
