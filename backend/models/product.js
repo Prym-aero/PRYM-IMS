@@ -7,25 +7,34 @@ const productSchema = new mongoose.Schema({
         unique: true,
         trim: true,
     },
+    product_model: {
+        type: String,
+        default: ""
+    },
+    product_description: {
+        type: String,
+        default: ""
+    },
+    product_image: {
+        type: String,
+        default: ""
+    },
+    category: {
+        type: String,
+        enum: ['general', 'mechanical', 'electrical'],
+        default: 'general'
+    },
     parts: [
         {
-            part_name: {
-                type: String,
-                required: true,
-                trim: true,
+            part_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Part',
+                required: true
             },
             quantity: {
                 type: Number,
                 required: true,
                 min: 1,
-            },
-            category: {
-                type: String,
-                required: true,
-            },
-            categoryName: {
-                type: String,
-                required: true,
             }
         },
     ],

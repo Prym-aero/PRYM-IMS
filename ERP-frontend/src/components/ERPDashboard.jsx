@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Package,
@@ -11,10 +11,13 @@ import {
   Clock,
   Plus,
   CheckCircle,
+  TrendingUp,
+  TrendingDown,
+  RefreshCw,
 } from "lucide-react";
-import { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -22,7 +25,41 @@ const ERPMDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [parts, setParts] = useState([]);
   const [lastPart, setLastPart] = useState({});
+  const [dailyInventory, setDailyInventory] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Fetch daily inventory data
+  const fetchDailyInventory = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/current-stock`);
+      if (response.data.success) {
+        setDailyInventory(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching daily inventory:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Force reopen daily stock with real inventory data
+  const forceReopenDailyStock = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/force-reopen-daily-stock`);
+      if (response.data.success) {
+        setDailyInventory(response.data.data);
+        toast.success('Daily stock updated with real inventory data!');
+      }
+    } catch (error) {
+      console.error('Error force reopening daily stock:', error);
+      toast.error('Failed to update daily stock');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -40,6 +77,7 @@ const ERPMDashboard = () => {
     };
 
     fetchInventory();
+    fetchDailyInventory();
   }, []);
 
  
@@ -144,97 +182,140 @@ const ERPMDashboard = () => {
 
         {/* Dashboard Cards */}
         <div className="p-6">
-          <div className="grid grid-cols-4 gap-6 mb-8">
-            {/* Total Unique Parts */}
-            {/* <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Total Unique Parts
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {parts.length}
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    ↗ 12% from last month
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Package className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div> */}
-
-            {/* Total Parts in Stock */}
+          {/* Daily Inventory Section */}
+          <div className="mb-8">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Total Parts in Stock
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {inStockCount}
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    ↗ 8% from last month
-                  </p>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Daily Inventory Status</h3>
+                    <p className="text-sm text-gray-600">
+                      Today's inventory tracking - {dailyInventory?.date || new Date().toISOString().split('T')[0]}
+                    </p>
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Archive className="w-6 h-6 text-green-600" />
+                <div className="flex space-x-2">
+                  <button
+                    onClick={fetchDailyInventory}
+                    disabled={loading}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center text-sm"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={forceReopenDailyStock}
+                    disabled={loading}
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center text-sm"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-1" />
+                    Sync Stock
+                  </button>
                 </div>
               </div>
-            </div>
 
-            {/* Parts Used / Scanned */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Parts Used / Dispatched
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {usedCount}
-                  </p>
-                  <p className="text-xs text-red-600 mt-1">
-                    ↗ 5% from last week
-                  </p>
+              {loading ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-2" />
+                  <p className="text-gray-600">Loading daily inventory data...</p>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <Scan className="w-6 h-6 text-red-600" />
-                </div>
-              </div>
-            </div>
+              ) : dailyInventory ? (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {/* Opening Stock */}
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-white" />
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        dailyInventory.isOpened
+                          ? 'bg-green-500 text-white'
+                          : 'bg-yellow-500 text-white'
+                      }`}>
+                        {dailyInventory.isOpened ? '✅ Opened' : '⏳ Pending'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-green-700 mb-1">Opening Stock</p>
+                      <p className="text-3xl font-bold text-green-800">{dailyInventory.openingStock}</p>
+                      <p className="text-xs text-green-600 mt-1">Today's starting inventory</p>
+                    </div>
+                  </div>
 
-            {/* Latest Part Added */}
-            {/* Latest Part Added */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Latest Part Added
-                  </p>
-                  <p className="text-[22px] font-semibold text-gray-900">
-                    {lastPart?.part_name || "No Part Added"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {lastPart?.part_number || "No Part Found"}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {lastPart?.date
-                      ? new Date(lastPart.date).toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : "N/A"}
-                  </p>
+                  {/* Current Stock */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <Package className="w-6 h-6 text-white" />
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        dailyInventory.isClosed
+                          ? 'bg-red-500 text-white'
+                          : 'bg-blue-500 text-white'
+                      }`}>
+                        {dailyInventory.isClosed ? '🔒 Closed' : '🔄 Live'}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-700 mb-1">Current Stock</p>
+                      <p className="text-3xl font-bold text-blue-800">{dailyInventory.currentStock}</p>
+                      <p className="text-xs text-blue-600 mt-1">Real-time inventory count</p>
+                    </div>
+                  </div>
+
+                  {/* Parts Added Today */}
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <Plus className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="px-3 py-1 bg-purple-500 text-white rounded-full text-xs font-medium">
+                        📦 Scanned
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-purple-700 mb-1">Parts Added</p>
+                      <p className="text-3xl font-bold text-purple-800">{dailyInventory.partsAdded}</p>
+                      <p className="text-xs text-purple-600 mt-1">Scanned today</p>
+                    </div>
+                  </div>
+
+                  {/* Parts Dispatched Today */}
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-medium">
+                        🚚 Sent
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-orange-700 mb-1">Parts Dispatched</p>
+                      <p className="text-3xl font-bold text-orange-800">{dailyInventory.partsDispatched}</p>
+                      <p className="text-xs text-orange-600 mt-1">Dispatched today</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-yellow-600" />
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-gray-600">No daily inventory data available</p>
+                  <button
+                    onClick={fetchDailyInventory}
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                  >
+                    Load Data
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
+
+
 
           {/* Parts Inventory Table */}
           <div className="bg-white rounded-lg shadow-sm">

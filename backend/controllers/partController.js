@@ -2,11 +2,22 @@ const Part = require('../models/produtPart'); // ✅ Make sure filename is corre
 const QR = require('../models/QR');
 const cloudinary = require("../config/Cloudinary");
 const streamifier = require("streamifier");
+const { incrementPartsAdded, incrementPartsDispatched } = require('./dailyInventoryController');
 
 
 exports.AddPart = async (req, res) => {
     try {
-        const { part_name, part_number } = req.body;
+        const {
+            part_name,
+            part_number,
+            part_model,
+            part_weight,
+            part_serial_prefix,
+            part_description,
+            part_image,
+            category,
+            technical_specifications
+        } = req.body;
 
         if (!part_name || !part_number) {
             return res.status(400).json({ message: "Part info not found" });
@@ -20,6 +31,15 @@ exports.AddPart = async (req, res) => {
         const part = new Part({
             part_name,
             part_number,
+            part_model: part_model || '',
+            part_weight: part_weight || '',
+            part_serial_prefix: part_serial_prefix || '',
+            part_description: part_description || '',
+            part_image: part_image || '',
+            category: category || 'mechanical',
+            technical_specifications: technical_specifications || [],
+            inventory: [],
+            lastSerialNumber: 0
         });
 
         await part.save();
@@ -110,6 +130,9 @@ exports.addToInventory = async (req, res) => {
 
         await part.save();
 
+        // ✅ Increment daily inventory tracking when part is added
+        await incrementPartsAdded(1);
+
         res.json({
             message: 'Inventory item added successfully',
             part,
@@ -150,6 +173,9 @@ exports.dispatchPart = async (req, res) => {
         inventoryItem.status = 'used';
 
         await part.save();
+
+        // ✅ Increment daily inventory tracking when part is dispatched
+        await incrementPartsDispatched(1);
 
         res.json({
             message: 'Inventory item dispatched successfully',

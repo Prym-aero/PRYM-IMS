@@ -2,12 +2,19 @@ const Product = require('../models/product');
 
 exports.addProduct = async (req, res) => {
     try {
-        const { product_name, parts } = req.body;
+        const {
+            product_name,
+            product_model,
+            product_description,
+            product_image,
+            category,
+            parts
+        } = req.body;
 
         console.log("Received product data:", req.body);
 
-        if (!product_name || !Array.isArray(parts) || parts.length === 0) {
-            return res.status(400).json({ message: "Missing required product data." });
+        if (!product_name) {
+            return res.status(400).json({ message: "Product name is required." });
         }
 
         const exists = await Product.findOne({ product_name });
@@ -15,7 +22,14 @@ exports.addProduct = async (req, res) => {
             return res.status(409).json({ message: "Product already exists." });
         }
 
-        const newProduct = new Product({ product_name, parts });
+        const newProduct = new Product({
+            product_name,
+            product_model: product_model || '',
+            product_description: product_description || '',
+            product_image: product_image || '',
+            category: category || 'general',
+            parts: parts || []
+        });
         await newProduct.save();
 
         res.status(201).json({ message: "Product added successfully", product: newProduct });

@@ -15,6 +15,8 @@ const partRoutes = require('./routes/partRoute')
 const productRoutes = require('./routes/productRoute');
 const userRoutes = require('./routes/userRoute');
 const QRRoutes = require('./routes/QRRoutes');
+const dailyInventoryRoutes = require('./routes/dailyInventoryRoute');
+const { initializeCronJobs } = require('./services/cronJobs');
 
 
 app.use(cors());
@@ -35,6 +37,7 @@ app.use('/api/ERP', partRoutes);
 app.use('/api/ERP', productRoutes);
 app.use('/api/ERP', userRoutes);
 app.use('/api/ERP', QRRoutes);
+app.use('/api/ERP/daily-inventory', dailyInventoryRoutes);
 
 
 
@@ -43,6 +46,9 @@ const PORT = process.env.PORT;
 
 server.listen(PORT, () => {
     console.log("Server is running on port ", PORT);
+
+    // Initialize daily inventory cron jobs
+    initializeCronJobs();
 })
 
 

@@ -4,7 +4,7 @@ import QRCodeGenerator from "../components/QRCodeGenerator";
 import ERPMDashboard from "../components/ERPDashboard";
 import ERPQRScanner from "../components/QRScannerCompnent";
 import InventoryDispatchSystem from "../components/InventoryCompnent";
-import AddProductsComponent from "../components/AddProductsComponent";
+import QCComponent from "../components/QCComponent";
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { useUser } from "../context/userContext";
@@ -53,7 +53,7 @@ const GenerateQRPage = () => {
       case "dashboard":
         return <ERPMDashboard />;
       case "addProduct":
-        return <AddProductsComponent />;
+        return <QCComponent />;
       case "generate":
         return <QRCodeGenerator />;
       case "scan":

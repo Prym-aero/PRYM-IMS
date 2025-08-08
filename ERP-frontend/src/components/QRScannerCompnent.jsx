@@ -124,7 +124,8 @@ const ERPQRScanner = () => {
       setSessionData(prev => ({
         ...prev,
         partName: selectedPart.part_name,
-        part_number: selectedPart.part_number
+        part_number: selectedPart.part_number,
+        serialPartNumber: selectedPart.part_serial_prefix,
       }));
     }
   };

@@ -87,6 +87,43 @@ const productPartSchema = new mongoose.Schema({
     dimensions: {
         type: String,
         default: ""
+    },
+    // New QC fields
+    part_model: {
+        type: String,
+        default: ""
+    },
+    part_weight: {
+        type: String,
+        default: ""
+    },
+    part_serial_prefix: {
+        type: String,
+        default: ""
+    },
+    part_image: {
+        type: String,
+        default: ""
+    },
+    category: {
+        type: String,
+        enum: ['mechanical', 'electrical', 'general'],
+        default: 'mechanical'
+    },
+    technical_specifications: {
+        type: [
+            {
+                property: {
+                    type: String,
+                    required: true
+                },
+                answer: {
+                    type: String,
+                    required: true
+                }
+            }
+        ],
+        default: []
     }
 });
 

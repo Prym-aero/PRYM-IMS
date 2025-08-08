@@ -6,6 +6,7 @@ import {
   Package,
   Settings,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { useUser } from "../context/userContext";
@@ -32,7 +33,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     },
     {
       id: "addProduct",
-      label: "Add Product",
+      label: "QC",
       icon: LayoutDashboard,
       roles: ["admin", "addProduct"],
     },
