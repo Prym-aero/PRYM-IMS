@@ -56,7 +56,12 @@ const QCComponent = () => {
   const fetchParts = async () => {
     try {
       setFetchLoading(true)
-      const response = await axios.get(`${API_URL}/api/ERP/part`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ERP/part`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.data.parts) {
         setParts(response.data.parts);
         setFetchLoading(false)
@@ -72,7 +77,12 @@ const QCComponent = () => {
   const fetchProducts = async () => {
     try {
       setFetchLoading(true)
-      const response = await axios.get(`${API_URL}/api/ERP/product`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ERP/product`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.data.products) {
         setProducts(response.data.products);
         setFetchLoading(false)
@@ -110,9 +120,11 @@ const QCComponent = () => {
       const formData = new FormData();
       formData.append('image', file);
 
+      const token = localStorage.getItem('token');
       const response = await axios.post(`${API_URL}/api/ERP/part/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -276,7 +288,13 @@ const QCComponent = () => {
       };
 
       console.log('Submitting part data:', submitData);
-      const response = await axios.post(`${API_URL}/api/ERP/part`, submitData);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/ERP/part`, submitData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (response.status === 200 || response.status === 201) {
         toast.success('Part added successfully!');
@@ -316,7 +334,13 @@ const QCComponent = () => {
     try {
       setLoading(true);
 
-      const response = await axios.post(`${API_URL}/api/ERP/product`, productFormData);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/ERP/product`, productFormData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (response.status === 200 || response.status === 201) {
         toast.success('Product added successfully!');

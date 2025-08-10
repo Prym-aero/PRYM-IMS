@@ -114,7 +114,12 @@ const ERPMDashboard = () => {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/ERP/part`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/ERP/part`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
 
         if (res.status === 200) {
           const fetchedParts = res.data.parts;
@@ -128,7 +133,12 @@ const ERPMDashboard = () => {
 
     const fetchProducts = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/ERP/product`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/ERP/product`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         if (res.status === 200) {
           setProducts(res.data.products || []);
         }

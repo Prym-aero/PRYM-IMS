@@ -50,8 +50,8 @@ exports.AddPart = async (req, res) => {
 
         // Log activity
         await logActivity({
-            user: req.user.id,
-            userName: req.user.name || 'Unknown User',
+            user: req.user?.id || 'unknown',
+            userName: req.user?.name || 'Unknown User',
             action: 'part_created',
             description: `Created new part: ${part_name}`,
             entityType: 'part',

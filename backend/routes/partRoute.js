@@ -9,13 +9,13 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 
-router.post('/part', AddPart);
-router.get('/part', getParts);
-router.post('/part/:partNumber/inventory', addToInventory);
+router.post('/part', authMiddleware, AddPart);
+router.get('/part', authMiddleware, getParts);
+router.post('/part/:partNumber/inventory', authMiddleware, addToInventory);
 router.get('/part/:id', getPartById);
 router.put('/part/:id', authMiddleware, updatePart);
 router.get('/part/:id/edit-permission', authMiddleware, checkPartEditPermission);
-router.post('/part/:partNumber/dispatch/:id', dispatchPart);
+router.post('/part/:partNumber/dispatch/:id', authMiddleware, dispatchPart);
 router.post("/disptach/upload-pdf", upload.single("pdf"), uploadDispatchPDF);
 router.post('/part/upload', authMiddleware, upload.single("image"), UploadImage);
 router.get('/qr/scanned-ids', getScannedQRIds);

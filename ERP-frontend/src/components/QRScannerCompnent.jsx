@@ -117,7 +117,12 @@ const ERPQRScanner = () => {
   // Fetch parts for dropdown
   const fetchParts = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/ERP/part`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/part`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       setPartsList(res.data.parts || []);
     } catch (err) {
       console.error('Error fetching parts:', err);
