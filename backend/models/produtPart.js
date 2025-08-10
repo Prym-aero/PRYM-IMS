@@ -34,7 +34,8 @@ const productPartSchema = new mongoose.Schema({
                 },
                 status: {
                     type: String,
-                    default: "in-stock"
+                    enum: ["validated", "in-stock", "used"],
+                    default: "validated"
                 },
                 date: {
                     type: Date,

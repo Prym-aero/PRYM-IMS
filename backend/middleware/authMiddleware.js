@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -14,7 +15,13 @@ const authMiddleware = async (req, res, next) => {
 
           const decoded = jwt.verify(token, JWT_SECRET);
 
-          req.user = { id: decoded.id }; // 👈 Attach user ID to req.user.id
+          // Get user details including role
+          const user = await User.findById(decoded.id).select("-password");
+          if (!user) {
+               return res.status(401).json({ message: "Unauthorized: User not found" });
+          }
+
+          req.user = { id: user._id, role: user.role, email: user.email, name: user.name };
           next();
      } catch (err) {
           // console.error("Auth middleware error:", err.message);

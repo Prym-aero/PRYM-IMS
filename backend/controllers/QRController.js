@@ -1,4 +1,5 @@
 const QR = require('../models/QR');
+const { logActivity } = require('./activityController');
 
 exports.getCounts = async (req, res) => {
     try {

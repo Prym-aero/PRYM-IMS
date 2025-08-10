@@ -3,6 +3,8 @@ import "./App.css";
 import GenerateQRPage from "./pages/GenerateQRPage";
 import LoginPage from "./pages/Login";
 import SinglePartPage from "./pages/SinglePartPage";
+import SingleProductPage from "./pages/SingleProductPage";
+import RecentActivitiesPage from "./pages/RecentActivitiesPage";
 
 function App() {
   return (
@@ -11,6 +13,8 @@ function App() {
         <Route path="/" element={<GenerateQRPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/part/:id" element={<SinglePartPage />} />
+        <Route path="/product/:id" element={<SingleProductPage />} />
+        <Route path="/activities" element={<RecentActivitiesPage />} />
       </Routes>
     </>
   );

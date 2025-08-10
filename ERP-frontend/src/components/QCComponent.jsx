@@ -41,7 +41,6 @@ const QCComponent = () => {
     product_model: '',
     product_description: '',
     product_image: '',
-    category: 'general',
     parts: []
   });
 
@@ -119,18 +118,25 @@ const QCComponent = () => {
 
       console.log(response.data)
 
-      if (response.data.url) {
-        
+      // Check for both 'url' and 'imageUrl' in response
+      const imageUrl = response.data.url || response.data.imageUrl;
+
+      if (imageUrl) {
+
         if (isProduct) {
           setProductFormData(prev => ({
             ...prev,
-            product_image: response.data.url
+            product_image: imageUrl
           }));
         } else {
-          setFormData(prev => ({
-            ...prev,
-            part_image: response.data.url
-          }));
+          setFormData(prev => {
+            const newData = {
+              ...prev,
+              part_image: imageUrl
+            };
+            console.log('Updated part form data with image:', newData);
+            return newData;
+          });
         }
         toast.success('Image uploaded successfully!');
       }
@@ -242,7 +248,6 @@ const QCComponent = () => {
       product_model: '',
       product_description: '',
       product_image: '',
-      category: 'general',
       parts: []
     });
   };
@@ -260,9 +265,9 @@ const QCComponent = () => {
     try {
       setLoading(true);
       
-      // Filter out empty specifications
+      // Filter out empty specifications - only include specs with both property and answer
       const validSpecs = formData.technical_specifications.filter(
-        spec => spec.property.trim() && spec.answer.trim()
+        spec => spec.property && spec.property.trim() && spec.answer && spec.answer.trim()
       );
 
       const submitData = {
@@ -270,6 +275,7 @@ const QCComponent = () => {
         technical_specifications: validSpecs
       };
 
+      console.log('Submitting part data:', submitData);
       const response = await axios.post(`${API_URL}/api/ERP/part`, submitData);
 
       if (response.status === 200 || response.status === 201) {
@@ -280,7 +286,19 @@ const QCComponent = () => {
       }
     } catch (error) {
       console.error('Error adding part:', error);
-      toast.error(error.response?.data?.message || 'Failed to add part');
+
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          'Failed to add part. Please try again.';
+
+      // If there are validation errors, show them
+      if (error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors.join(', ');
+        toast.error(`Validation Error: ${validationErrors}`);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -797,22 +815,7 @@ const QCComponent = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={productFormData.category}
-                    onChange={handleProductInputChange}
-                    required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="general">General</option>
-                    <option value="mechanical">Mechanical</option>
-                    <option value="electrical">Electrical</option>
-                  </select>
-                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

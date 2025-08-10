@@ -26,6 +26,7 @@ const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const ERPQRScanner = () => {
   const [scannedData, setScannedData] = useState([]);
+  const [validatedParts, setValidatedParts] = useState([]);
 
   const [isSessionStarted, setIsSessionStarted] = useState(false);
 
@@ -43,6 +44,7 @@ const ERPQRScanner = () => {
     purpose: "Dispatch",
     operationDate: "7/15/2025",
     operatorName: "",
+    operationType: "qc_validation", // New field for operation type
   });
 
   const [devices, setDevices] = useState([
@@ -105,6 +107,13 @@ const ERPQRScanner = () => {
     fetchParts();
   }, [])
 
+  // Fetch validated parts when operation type changes to store_inward
+  useEffect(() => {
+    if (sessionData.operationType === 'store_inward') {
+      fetchValidatedParts();
+    }
+  }, [sessionData.operationType]);
+
   // Fetch parts for dropdown
   const fetchParts = async () => {
     try {
@@ -135,8 +144,30 @@ const ERPQRScanner = () => {
     return date.toISOString().split("T")[0];
   };
 
+  // Fetch validated parts for store inward
+  const fetchValidatedParts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ERP/parts/validated`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data && response.data.validatedParts) {
+        setValidatedParts(response.data.validatedParts);
+      }
+    } catch (error) {
+      console.error('Error fetching validated parts:', error);
+      toast.error('Failed to fetch validated parts');
+    }
+  };
+
+
+
   const handleAddToInventory = async (data) => {
     try {
+      // All operations now go through the same endpoint with operationType
       const res = await axios.post(
         `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
         {
@@ -144,14 +175,22 @@ const ERPQRScanner = () => {
           part_name: data.part_name,
           part_number: data.part_number,
           serialPartNumber: data.serialPartNumber,
-          status: "in-stock",
+          status: sessionData.operationType === 'qc_validation' ? "validated" : undefined,
           date: data.date,
           partImage: data.image || sessionData.partImage || "",
+          operationType: sessionData.operationType, // Send operation type to backend
         }
       );
 
       if (res.status === 200) {
-        toast.success("Added part to the inventory successfully!");
+        // Success messages based on operation type
+        if (sessionData.operationType === 'qc_validation') {
+          toast.success("Item validated and added to inventory!");
+        } else if (sessionData.operationType === 'store_inward') {
+          toast.success("Item moved to stock successfully!");
+        } else if (sessionData.operationType === 'store_outward') {
+          toast.success("Item dispatched successfully!");
+        }
         return { status: "Success", isDuplicate: false };
       }
     } catch (err) {
@@ -165,6 +204,14 @@ const ERPQRScanner = () => {
           toast.error("Item already exists in inventory.");
           return { status: "Duplicate", isDuplicate: true };
         }
+      } else if (err.response?.status === 400) {
+        const errorMessage = err.response?.data?.message || "Operation failed";
+        toast.error(errorMessage);
+        return { status: "Error", isDuplicate: false };
+      } else if (err.response?.status === 404) {
+        const errorMessage = err.response?.data?.message || "Item not found";
+        toast.error(errorMessage);
+        return { status: "Error", isDuplicate: false };
       } else {
         toast.error("Something went wrong.");
         return { status: "Error", isDuplicate: false };
@@ -417,17 +464,23 @@ const ERPQRScanner = () => {
                   Start New Scan Session
                 </h2>
                 <div className="space-y-4 grid grid-cols-2 gap-4">
-                  {/* <div>
+                  <div>
                     <label className="block text-sm text-gray-600 mb-1">
-                      Purpose
+                      Operation Type
                     </label>
-                    <select className="w-full p-2 border rounded-lg">
-                      <option>--select--</option>
-                      <option>Dispatch</option>
-                      <option>Receiving</option>
-                      <option>Audit</option>
+                    <select
+                      value={sessionData.operationType}
+                      onChange={(e) => setSessionData(prev => ({
+                        ...prev,
+                        operationType: e.target.value
+                      }))}
+                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="qc_validation">QC Validation</option>
+                      <option value="store_inward">Store Inward</option>
+                      <option value="store_outward">Store Outward</option>
                     </select>
-                  </div> */}
+                  </div>
                   <div>
                     <label className="text-sm text-gray-600">Select Part</label>
                     <select

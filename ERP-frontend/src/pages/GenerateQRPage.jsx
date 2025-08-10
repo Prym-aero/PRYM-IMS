@@ -18,7 +18,7 @@ const roleToDefaultTab = {
 };
 
 const tabAccess = {
-  dashboard: ["admin"],
+  dashboard: ["admin", "addProduct", "adder", "scanner", "inventory"],
   addProduct: ["admin", "addProduct"],
   generate: ["admin", "adder"],
   scan: ["admin", "scanner"],

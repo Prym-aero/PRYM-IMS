@@ -3,6 +3,7 @@ const QR = require('../models/QR');
 const cloudinary = require("../config/Cloudinary");
 const streamifier = require("streamifier");
 const { incrementPartsAdded, incrementPartsDispatched } = require('./dailyInventoryController');
+const { logActivity } = require('./activityController');
 
 
 exports.AddPart = async (req, res) => {
@@ -18,6 +19,9 @@ exports.AddPart = async (req, res) => {
             category,
             technical_specifications
         } = req.body;
+
+
+        console.log('Received part data:', req.body);
 
         if (!part_name || !part_number) {
             return res.status(400).json({ message: "Part info not found" });
@@ -44,11 +48,52 @@ exports.AddPart = async (req, res) => {
 
         await part.save();
 
+        // Log activity
+        await logActivity({
+            user: req.user.id,
+            userName: req.user.name || 'Unknown User',
+            action: 'part_created',
+            description: `Created new part: ${part_name}`,
+            entityType: 'part',
+            entityId: part._id.toString(),
+            entityName: part_name,
+            metadata: {
+                part_number,
+                category,
+                part_model
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
+
         res.status(201).json({ message: "Added part to the list", part });
 
     } catch (error) {
         console.error("Error in adding part to the list:", error);
-        res.status(500).json({ message: "Internal Server Error", error });
+
+        // Check for validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(e => e.message);
+            return res.status(400).json({
+                message: "Validation error",
+                errors: validationErrors,
+                details: error.message
+            });
+        }
+
+        // Check for duplicate key error
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: "Part number already exists",
+                error: "Duplicate part number"
+            });
+        }
+
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: error.message,
+            details: error
+        });
     }
 };
 
@@ -72,7 +117,9 @@ exports.getParts = async (req, res) => {
 
 exports.addToInventory = async (req, res) => {
     const { partNumber } = req.params;
-    const { id, part_name, date, status, partImage, serialPartNumber } = req.body;
+    const { id, part_name, date, status, partImage, serialPartNumber, operationType } = req.body;
+
+    console.log("Received data:", req.body);
 
     try {
         const part = await Part.findOne({ part_number: partNumber });
@@ -81,6 +128,121 @@ exports.addToInventory = async (req, res) => {
             return res.status(404).json({ message: 'Part not found' });
         }
 
+        // Handle different operation types
+        if (operationType === 'store_inward') {
+            // Store Inward: Move validated parts to in-stock
+            const inventoryItem = part.inventory.find(item => item.id === id);
+
+            if (!inventoryItem) {
+                return res.status(404).json({
+                    message: 'Inventory item not found',
+                    status: 'error',
+                    isDuplicate: false
+                });
+            }
+
+            if (inventoryItem.status !== 'validated') {
+                return res.status(400).json({
+                    message: 'Item must be validated before store inward',
+                    currentStatus: inventoryItem.status,
+                    status: 'error',
+                    isDuplicate: false
+                });
+            }
+
+            // Update status from validated to in-stock
+            inventoryItem.status = 'in-stock';
+            inventoryItem.inwardDate = new Date();
+
+            await part.save();
+
+            // ✅ Increment daily inventory tracking when part is moved to stock
+            await incrementPartsAdded(1);
+
+            // Log activity
+            await logActivity({
+                user: req.user?.id || 'unknown',
+                userName: req.user?.name || 'Unknown User',
+                action: 'inventory_added',
+                description: `Part moved to stock: ${inventoryItem.part_name} (${id})`,
+                entityType: 'inventory',
+                entityId: id,
+                entityName: inventoryItem.part_name,
+                metadata: {
+                    part_number: partNumber,
+                    serial_number: inventoryItem.serialPartNumber,
+                    from_status: 'validated',
+                    to_status: 'in-stock'
+                },
+                ipAddress: req.ip,
+                userAgent: req.get('User-Agent')
+            });
+
+            return res.json({
+                message: 'Part successfully moved to stock',
+                part,
+                status: 'success',
+                isDuplicate: false
+            });
+
+        } else if (operationType === 'store_outward') {
+            // Store Outward: Dispatch in-stock parts
+            const inventoryItem = part.inventory.find(item => item.id === id);
+
+            if (!inventoryItem) {
+                return res.status(404).json({
+                    message: 'Inventory item not found',
+                    status: 'error',
+                    isDuplicate: false
+                });
+            }
+
+            if (inventoryItem.status !== 'in-stock') {
+                return res.status(400).json({
+                    message: 'Item must be in-stock before dispatch',
+                    currentStatus: inventoryItem.status,
+                    status: 'error',
+                    isDuplicate: false
+                });
+            }
+
+            // Update status from in-stock to used
+            inventoryItem.status = 'used';
+            inventoryItem.dispatchDate = new Date();
+
+            await part.save();
+
+            // ✅ Increment daily inventory tracking when part is dispatched
+            await incrementPartsDispatched(1);
+
+            // Log activity
+            await logActivity({
+                user: req.user?.id || 'unknown',
+                userName: req.user?.name || 'Unknown User',
+                action: 'inventory_dispatched',
+                description: `Part dispatched: ${inventoryItem.part_name} (${id})`,
+                entityType: 'inventory',
+                entityId: id,
+                entityName: inventoryItem.part_name,
+                metadata: {
+                    part_number: partNumber,
+                    serial_number: inventoryItem.serialPartNumber,
+                    from_status: 'in-stock',
+                    to_status: 'used'
+                },
+                ipAddress: req.ip,
+                userAgent: req.get('User-Agent')
+            });
+
+            return res.json({
+                message: 'Part successfully dispatched',
+                part,
+                status: 'success',
+                isDuplicate: false
+            });
+        }
+
+        // Default: QC Validation - Add new parts with validated status
         // ✅ Check if the part with the same `id` already exists in inventory
         const alreadyExists = part.inventory.some((item) => item.id === id);
 
@@ -117,21 +279,41 @@ exports.addToInventory = async (req, res) => {
             await qrDoc.save();
         }
 
-        // ✅ Add to inventory if not exists
+        // ✅ Add to inventory with default "validated" status for QC validation
+        const finalStatus = status || "validated"; // Default to validated for QC validation
+
         part.inventory.push({
             id,
             part_name,
             part_number: partNumber,
-            partImage: partImage || "",
+            image: partImage || "",
             serialPartNumber: serialPartNumber + serialPartNumberPrefix,
             date: date || new Date(),
-            status,
+            status: finalStatus,
         });
 
         await part.save();
 
         // ✅ Increment daily inventory tracking when part is added
         await incrementPartsAdded(1);
+
+        // Log activity
+        await logActivity({
+            user: req.user?.id || 'unknown',
+            userName: req.user?.name || 'Unknown User',
+            action: 'qr_scanned',
+            description: `QR code scanned for part: ${part_name} (${id})`,
+            entityType: 'qr',
+            entityId: id,
+            entityName: part_name,
+            metadata: {
+                part_number: partNumber,
+                serial_number: serialPartNumber + serialPartNumberPrefix,
+                status
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
 
         res.json({
             message: 'Inventory item added successfully',
@@ -176,6 +358,23 @@ exports.dispatchPart = async (req, res) => {
 
         // ✅ Increment daily inventory tracking when part is dispatched
         await incrementPartsDispatched(1);
+
+        // Log activity
+        await logActivity({
+            user: req.user?.id || 'unknown',
+            userName: req.user?.name || 'Unknown User',
+            action: 'inventory_dispatched',
+            description: `Part dispatched: ${inventoryItem.part_name} (${id})`,
+            entityType: 'inventory',
+            entityId: id,
+            entityName: inventoryItem.part_name,
+            metadata: {
+                part_number: partNumber,
+                serial_number: inventoryItem.serialPartNumber
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
 
         res.json({
             message: 'Inventory item dispatched successfully',
@@ -235,6 +434,40 @@ exports.getPartById = async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 }
+
+
+
+// Get validated parts (pending for store inward)
+exports.getValidatedParts = async (req, res) => {
+    try {
+        const parts = await Part.find({});
+        const validatedItems = [];
+
+        parts.forEach(part => {
+            const validated = part.inventory.filter(item => item.status === 'validated');
+            validated.forEach(item => {
+                validatedItems.push({
+                    ...item.toObject(),
+                    part_id: part._id,
+                    part_details: {
+                        part_name: part.part_name,
+                        part_number: part.part_number,
+                        part_description: part.part_description
+                    }
+                });
+            });
+        });
+
+        res.status(200).json({
+            message: 'Validated parts retrieved successfully',
+            validatedParts: validatedItems,
+            count: validatedItems.length
+        });
+    } catch (err) {
+        console.error('Error getting validated parts:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 
 
@@ -410,6 +643,21 @@ exports.updatePart = async (req, res) => {
             return res.status(404).json({ message: "Part not found" });
         }
 
+        // Check if user has permission to edit (24-hour rule)
+        if (req.user && req.user.role !== 'admin') {
+            const createdAt = part.createdAt || part.date;
+            const now = new Date();
+            const hoursSinceCreation = (now - new Date(createdAt)) / (1000 * 60 * 60);
+
+            if (hoursSinceCreation > 24) {
+                return res.status(403).json({
+                    message: "Edit not allowed. Parts can only be edited within 24 hours of creation. Contact admin for changes.",
+                    canEdit: false,
+                    hoursSinceCreation: Math.round(hoursSinceCreation)
+                });
+            }
+        }
+
         // Update part fields
         if (part_name !== undefined) part.part_name = part_name;
         if (part_number !== undefined) part.part_number = part_number;
@@ -424,6 +672,23 @@ exports.updatePart = async (req, res) => {
 
         await part.save();
 
+        // Log activity
+        await logActivity({
+            user: req.user.id,
+            userName: req.user.name || 'Unknown User',
+            action: 'part_updated',
+            description: `Updated part: ${part.part_name}`,
+            entityType: 'part',
+            entityId: part._id.toString(),
+            entityName: part.part_name,
+            metadata: {
+                part_number: part.part_number,
+                updatedFields: Object.keys(req.body)
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
+
         res.status(200).json({
             message: "Part updated successfully",
             part
@@ -431,6 +696,50 @@ exports.updatePart = async (req, res) => {
     } catch (err) {
         console.error("Error updating part:", err);
         res.status(500).json({ message: "Server error" });
+    }
+}
+
+// Check if user can edit part
+exports.checkPartEditPermission = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ message: "Part ID is required" });
+        }
+
+        const part = await Part.findById(id);
+
+        if (!part) {
+            return res.status(404).json({ message: "Part not found" });
+        }
+
+        let canEdit = true;
+        let message = "Edit allowed";
+        let hoursSinceCreation = 0;
+
+        // Check if user has permission to edit (24-hour rule)
+        if (req.user && req.user.role !== 'admin') {
+            const createdAt = part.createdAt || part.date;
+            const now = new Date();
+            hoursSinceCreation = (now - new Date(createdAt)) / (1000 * 60 * 60);
+
+            if (hoursSinceCreation > 24) {
+                canEdit = false;
+                message = "Edit not allowed. Parts can only be edited within 24 hours of creation. Contact admin for changes.";
+            }
+        }
+
+        res.status(200).json({
+            canEdit,
+            message,
+            hoursSinceCreation: Math.round(hoursSinceCreation),
+            isAdmin: req.user?.role === 'admin'
+        });
+
+    } catch (err) {
+        console.error("Error checking edit permission:", err);
+        res.status(500).json({ message: "Internal server error", err });
     }
 }
 

@@ -16,6 +16,7 @@ const productRoutes = require('./routes/productRoute');
 const userRoutes = require('./routes/userRoute');
 const QRRoutes = require('./routes/QRRoutes');
 const dailyInventoryRoutes = require('./routes/dailyInventoryRoute');
+const activityRoutes = require('./routes/activityRoute');
 const { initializeCronJobs } = require('./services/cronJobs');
 
 
@@ -38,6 +39,7 @@ app.use('/api/ERP', productRoutes);
 app.use('/api/ERP', userRoutes);
 app.use('/api/ERP', QRRoutes);
 app.use('/api/ERP/daily-inventory', dailyInventoryRoutes);
+app.use('/api/ERP/activities', activityRoutes);
 
 
 
