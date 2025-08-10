@@ -29,7 +29,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       id: "dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      roles: ["admin"],
+      roles: ["admin", "addProduct", "adder", "scanner", "inventory"],
     },
     {
       id: "addProduct",
@@ -39,19 +39,19 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     },
     {
       id: "generate",
-      label: "Generate QR",
+      label: "Qr Editor",
       icon: QrCode,
       roles: ["admin", "adder"],
     },
     {
       id: "scan",
-      label: "Scan QR",
+      label: "Store",
       icon: ScanLine,
       roles: ["admin", "scanner"],
     },
     {
       id: "inventory",
-      label: "Inventory",
+      label: "Dispatch",
       icon: Package,
       roles: ["admin", "inventory"],
     },

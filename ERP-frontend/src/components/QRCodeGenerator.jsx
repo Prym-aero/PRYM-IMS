@@ -33,23 +33,30 @@ const QRCodeGenerator = () => {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [selectedProductData, setSelectedProductData] = useState(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const itemsPerPage = 8;
 
   // 🔁 Fetch all parts from backend
   const fetchParts = async () => {
     try {
+      setLoading(true)
       const res = await axios.get(`${API_URL}/api/ERP/part`);
       setPartsList(res.data.parts);
+      setLoading(false);
     } catch (err) {
       console.error("Failed to fetch parts:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchProducts = async () => {
     try {
+      setLoading(true)
       const res = await axios.get(`${API_URL}/api/ERP/product`);
       setProductsList(res.data.products || []);
+      setLoading(false)
     } catch (err) {
       if (err.response?.status === 404) {
         toast.error("No products found.");
@@ -57,16 +64,22 @@ const QRCodeGenerator = () => {
         console.error("Failed to fetch products:", err);
         toast.error("Error fetching products.");
       }
+    } finally {
+       setLoading(false)
     }
   };
 
   const fetchQRCount = async () => {
     try {
+       setLoading(true)
       const res = await axios.get(`${API_URL}/api/ERP/qr/count`);
       setCount(res.data.counts.generatedCount);
+      setLoading(false)
     } catch (err) {
       console.error("Failed to fetch QR count:", err);
       // setCount(1); // Default to 1 if fetch fails
+    } finally {
+       setLoading(false)
     }
   };
 
@@ -78,7 +91,7 @@ const QRCodeGenerator = () => {
 
   const handlePartChange = (e) => {
     setPartForm({ ...partForm, [e.target.name]: e.target.value });
-  }; 
+  };
 
   // 🔘 Add new part to backend
   // const addNewPart = async () => {
@@ -185,6 +198,22 @@ const QRCodeGenerator = () => {
       setIsGenerating(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        {/* Spinning Circle */}
+        <div className="w-[320px] h-[320px] rounded-full border-[6px] border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin absolute"></div>
+
+        {/* Static Image */}
+        <img
+          src="/PRYM_Aerospace_Logo-02-removebg-preview.png"
+          alt="Loading..."
+          className="w-[300px] h-[200px] object-contain relative z-10"
+        />
+      </div>
+    );
+  }
 
   // ⬇️ Export as PDF
   const exportAsPDF = async () => {

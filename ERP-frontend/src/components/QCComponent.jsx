@@ -51,29 +51,56 @@ const QCComponent = () => {
     fetchProducts();
   }, []);
 
+  const [fetchLoading, setFetchLoading] = useState(false);
+
   // Fetch parts
   const fetchParts = async () => {
     try {
+      setFetchLoading(true)
       const response = await axios.get(`${API_URL}/api/ERP/part`);
       if (response.data.parts) {
         setParts(response.data.parts);
+        setFetchLoading(false)
       }
     } catch (error) {
       console.error('Error fetching parts:', error);
+    } finally {
+       setFetchLoading(false)
     }
   };
 
   // Fetch products
   const fetchProducts = async () => {
     try {
+      setFetchLoading(true)
       const response = await axios.get(`${API_URL}/api/ERP/product`);
       if (response.data.products) {
         setProducts(response.data.products);
+        setFetchLoading(false)
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+    } finally {
+      setFetchLoading(false)
     }
   };
+
+
+  if (fetchLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        {/* Spinning Circle */}
+        <div className="w-[320px] h-[320px] rounded-full border-[6px] border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin absolute"></div>
+
+        {/* Static Image */}
+        <img
+          src="/PRYM_Aerospace_Logo-02-removebg-preview.png"
+          alt="Loading..."
+          className="w-[300px] h-[200px] object-contain relative z-10"
+        />
+      </div>
+    );
+  }
 
   // Handle image upload
   const handleImageUpload = async (file, isProduct = false) => {
