@@ -58,7 +58,13 @@ const ERPMDashboard = () => {
   const forceReopenDailyStock = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/force-reopen-daily-stock`);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/force-reopen-daily-stock`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (response.data.success) {
         setDailyInventory(response.data.data);
         toast.success('Daily stock updated with real inventory data!');

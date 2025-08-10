@@ -36,7 +36,12 @@ const DailyInventoryManager = () => {
   const fetchCurrentStock = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/current-stock`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/current-stock`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.data.success) {
         setCurrentStock(response.data.data);
       }
@@ -57,9 +62,15 @@ const DailyInventoryManager = () => {
 
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
       const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/add-parts`, {
         quantity: parseInt(addQuantity),
         description: addDescription
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.data.success) {
@@ -85,9 +96,15 @@ const DailyInventoryManager = () => {
 
     try {
       setLoading(true);
+      const token = localStorage.getItem('token');
       const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/dispatch-parts`, {
         quantity: parseInt(dispatchQuantity),
         description: dispatchDescription
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.data.success) {
@@ -108,7 +125,12 @@ const DailyInventoryManager = () => {
   const fetchDailyReport = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/report/${selectedDate}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/report/${selectedDate}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.data.success) {
         setDailyReport(response.data.data);
         toast.success('Daily report fetched successfully');
@@ -130,7 +152,13 @@ const DailyInventoryManager = () => {
   const triggerOpenStock = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/open-daily-stock`);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/open-daily-stock`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (response.data.success) {
         toast.success(response.data.message);
         fetchCurrentStock();
@@ -147,7 +175,13 @@ const DailyInventoryManager = () => {
   const triggerCloseStock = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/close-daily-stock`);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/ERP/daily-inventory/close-daily-stock`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (response.data.success) {
         toast.success(response.data.message);
         fetchCurrentStock();

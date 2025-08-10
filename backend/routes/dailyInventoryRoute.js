@@ -10,25 +10,26 @@ const {
   closeDailyStock,
   forceReopenDailyStock
 } = require('../controllers/dailyInventoryController');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Get current stock for today
-router.get('/current-stock', getCurrentStock);
+router.get('/current-stock', authMiddleware, getCurrentStock);
 
 // Add parts to inventory
-router.post('/add-parts', addParts);
+router.post('/add-parts', authMiddleware, addParts);
 
 // Dispatch parts from inventory
-router.post('/dispatch-parts', dispatchParts);
+router.post('/dispatch-parts', authMiddleware, dispatchParts);
 
 // Get daily report for a specific date
-router.get('/report/:date', getDailyReport);
+router.get('/report/:date', authMiddleware, getDailyReport);
 
 // Get reports for a date range
-router.get('/reports', getReportsRange);
+router.get('/reports', authMiddleware, getReportsRange);
 
 // Manual triggers for automation (for testing)
-router.post('/open-daily-stock', openDailyStock);
-router.post('/close-daily-stock', closeDailyStock);
-router.post('/force-reopen-daily-stock', forceReopenDailyStock);
+router.post('/open-daily-stock', authMiddleware, openDailyStock);
+router.post('/close-daily-stock', authMiddleware, closeDailyStock);
+router.post('/force-reopen-daily-stock', authMiddleware, forceReopenDailyStock);
 
 module.exports = router;

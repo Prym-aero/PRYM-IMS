@@ -41,7 +41,12 @@ const QRCodeGenerator = () => {
   const fetchParts = async () => {
     try {
       setLoading(true)
-      const res = await axios.get(`${API_URL}/api/ERP/part`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/part`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       setPartsList(res.data.parts);
       setLoading(false);
     } catch (err) {
@@ -54,7 +59,12 @@ const QRCodeGenerator = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const res = await axios.get(`${API_URL}/api/ERP/product`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/product`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       setProductsList(res.data.products || []);
       setLoading(false)
     } catch (err) {
@@ -72,7 +82,12 @@ const QRCodeGenerator = () => {
   const fetchQRCount = async () => {
     try {
        setLoading(true)
-      const res = await axios.get(`${API_URL}/api/ERP/qr/count`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/qr/count`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       setCount(res.data.counts.generatedCount);
       setLoading(false)
     } catch (err) {
@@ -179,10 +194,17 @@ const QRCodeGenerator = () => {
       // Update React state after loop finishes
       setCount(localCount);
 
+      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${API_URL}/api/ERP/qr/count`,
         {
           count: localCount,
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 

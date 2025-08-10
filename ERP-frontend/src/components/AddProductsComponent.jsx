@@ -29,7 +29,12 @@ const AddProductsComponent = () => {
     // Fetch all parts from backend
     const fetchParts = async () => {
         try {
-            const res = await axios.get(`${API_URL}/api/ERP/part`);
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/api/ERP/part`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
             setPartsList(res.data.parts);
         } catch (err) {
             console.error("Failed to fetch parts:", err);
@@ -40,7 +45,12 @@ const AddProductsComponent = () => {
     // Fetch all products from backend
     const fetchProducts = async () => {
         try {
-            const res = await axios.get(`${API_URL}/api/ERP/product`);
+            const token = localStorage.getItem('token');
+            const res = await axios.get(`${API_URL}/api/ERP/product`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
             setProductsList(res.data.products || []);
         } catch (err) {
             if (err.response?.status === 404) {
@@ -71,7 +81,13 @@ const AddProductsComponent = () => {
         }
 
         try {
-            await axios.post(`${API_URL}/api/ERP/part`, partForm);
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/api/ERP/part`, partForm, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             toast.success("Part added successfully!");
             setPartForm({ part_name: "", part_number: "", partImage: "" });
             fetchParts();
@@ -99,7 +115,13 @@ const AddProductsComponent = () => {
         }
 
         try {
-            await axios.post(`${API_URL}/api/ERP/product`, productForm);
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_URL}/api/ERP/product`, productForm, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             toast.success("Product added successfully!");
             setProductForm({
                 product_name: "",
