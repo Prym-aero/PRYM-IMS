@@ -43,7 +43,12 @@ const ERPMDashboard = () => {
   const fetchDailyInventory = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/current-stock`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ERP/daily-inventory/current-stock`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.data.success) {
         setDailyInventory(response.data.data);
       }
