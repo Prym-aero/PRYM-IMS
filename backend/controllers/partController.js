@@ -294,8 +294,8 @@ exports.addToInventory = async (req, res) => {
 
         await part.save();
 
-        // ✅ Increment daily inventory tracking when part is added
-        await incrementPartsAdded(1);
+        // ✅ QC Validation: Do NOT increment parts added since they're only "validated", not "in-stock"
+        // Parts will be counted when they move to "in-stock" via store inward operation
 
         // Log activity
         await logActivity({

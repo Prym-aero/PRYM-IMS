@@ -462,7 +462,7 @@ const ERPMDashboard = () => {
                     <div>
                       <p className="text-sm font-medium text-purple-700 mb-1">Parts Added</p>
                       <p className="text-3xl font-bold text-purple-800">{dailyInventory.partsAdded}</p>
-                      <p className="text-xs text-purple-600 mt-1">Scanned today</p>
+                      <p className="text-xs text-purple-600 mt-1">Moved to stock today</p>
                     </div>
                   </div>
 

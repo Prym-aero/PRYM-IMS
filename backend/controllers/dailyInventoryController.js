@@ -46,7 +46,7 @@ exports.getCurrentStock = async (req, res) => {
       success: true,
       data: {
         date: todayInventory.date,
-        currentStock: todayInventory.currentStock,
+        currentStock: realStockData.totalInStock, // ✅ Use real in-stock count instead of calculated
         openingStock: todayInventory.openingStock,
         partsAdded: todayInventory.partsAdded,
         partsDispatched: todayInventory.partsDispatched,
