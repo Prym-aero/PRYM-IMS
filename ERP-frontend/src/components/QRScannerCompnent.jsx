@@ -95,7 +95,12 @@ const ERPQRScanner = () => {
   useEffect(() => {
     const fetchQRIds = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/ERP/qr/scanned-ids`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/ERP/qr/scanned-ids`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         setQrIds(res.data.scannedQRIds || []);
       } catch (err) {
         console.error('Error fetching QR IDs:', err);
@@ -173,6 +178,7 @@ const ERPQRScanner = () => {
   const handleAddToInventory = async (data) => {
     try {
       // All operations now go through the same endpoint with operationType
+      const token = localStorage.getItem('token');
       const res = await axios.post(
         `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
         {
@@ -184,6 +190,12 @@ const ERPQRScanner = () => {
           date: data.date,
           partImage: data.image || sessionData.partImage || "",
           operationType: sessionData.operationType, // Send operation type to backend
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -235,12 +247,14 @@ const ERPQRScanner = () => {
     formData.append("image", file); // 👈 name must match multer's upload.single("image")
 
     try {
+      const token = localStorage.getItem('token');
       const res = await axios.post(
         `${API_URL}/api/ERP/part/upload`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            'Authorization': `Bearer ${token}`,
           },
         }
       );

@@ -75,8 +75,12 @@ const SinglePartPage = () => {
   useEffect(() => {
     const fetchPart = async () => {
       try {
-        // const res = await axios.get(`${API_URL}/api/ERP/part/${id}`);
-        const res = await axios.get(`${API_URL}/api/ERP/part/${id}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/ERP/part/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
 
         if (res.status === 200) {
           const partData = res.data.part;
@@ -213,9 +217,11 @@ const SinglePartPage = () => {
     formData.append("image", file);
 
     try {
+      const token = localStorage.getItem('token');
       const res = await axios.post(`${API_URL}/api/ERP/part/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -231,6 +237,10 @@ const SinglePartPage = () => {
 
       const updateRes = await axios.put(`${API_URL}/api/ERP/part/${id}`, {
         images: updatedImages
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (updateRes.status === 200) {

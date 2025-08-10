@@ -674,8 +674,8 @@ exports.updatePart = async (req, res) => {
 
         // Log activity
         await logActivity({
-            user: req.user.id,
-            userName: req.user.name || 'Unknown User',
+            user: req.user?.id || 'unknown',
+            userName: req.user?.name || 'Unknown User',
             action: 'part_updated',
             description: `Updated part: ${part.part_name}`,
             entityType: 'part',

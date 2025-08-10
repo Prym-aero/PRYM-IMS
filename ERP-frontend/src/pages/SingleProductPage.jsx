@@ -65,7 +65,12 @@ const SingleProductPage = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/ERP/product/${id}`);
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API_URL}/api/ERP/product/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
 
         if (res.status === 200) {
           const productData = res.data.product;
@@ -94,7 +99,12 @@ const SingleProductPage = () => {
   // Fetch available parts
   const fetchAvailableParts = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/ERP/part`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/part`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (res.status === 200) {
         setAvailableParts(res.data.parts || []);
       }
@@ -162,8 +172,12 @@ const SingleProductPage = () => {
       const formData = new FormData();
       formData.append("image", file);
 
+      const token = localStorage.getItem('token');
       const res = await axios.post(`${API_URL}/api/ERP/part/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: {
+          "Content-Type": "multipart/form-data",
+          'Authorization': `Bearer ${token}`,
+        }
       });
 
       if (res.status === 200 && res.data.url) {

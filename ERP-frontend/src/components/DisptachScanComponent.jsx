@@ -185,8 +185,15 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
     console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
     if (isMatched) {
       try {
+        const token = localStorage.getItem('token');
         const res = await axios.post(
-          `${API_URL}/api/ERP/part/${item.part_number}/dispatch/${item.id}`
+          `${API_URL}/api/ERP/part/${item.part_number}/dispatch/${item.id}`,
+          {},
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
         );
 
         if (res.status === 200) {

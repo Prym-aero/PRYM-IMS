@@ -5,7 +5,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 router.post('/product', authMiddleware, addProduct);
 router.get('/product', authMiddleware, getProcuts);
-router.get('/product/:id', getProductById);
+router.get('/product/:id', authMiddleware, getProductById);
 router.put('/product/:id', authMiddleware, updateProduct);
 router.get('/product/:id/edit-permission', authMiddleware, checkProductEditPermission);
 
