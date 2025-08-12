@@ -563,7 +563,7 @@ const QCComponent = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Part Model
+                       Model
                     </label>
                     <input
                       type="text"
@@ -827,7 +827,7 @@ const QCComponent = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Model
+                    Model
                   </label>
                   <input
                     type="text"
