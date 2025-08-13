@@ -88,7 +88,7 @@ const GenerateQRPage = () => {
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto p-2 sm:p-4 lg:p-6">
         {renderContent()}
       </div>
     </div>

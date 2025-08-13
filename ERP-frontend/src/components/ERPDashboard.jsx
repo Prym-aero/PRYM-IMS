@@ -138,7 +138,7 @@ const ERPMDashboard = () => {
           setLastPart(fetchedParts[fetchedParts.length - 1]);
         }
       } catch (err) {
-        console.error("Error fetching parts:", err);
+        // console.error("Error fetching parts:", err);
       }
     };
 
@@ -152,9 +152,11 @@ const ERPMDashboard = () => {
         });
         if (res.status === 200) {
           setProducts(res.data.products || []);
+        } else if (res.status === 404) {
+          setProducts([]);
         }
       } catch (err) {
-        console.error("Error fetching products:", err);
+        // console.error("Error fetching products:", err);
       }
     };
 

@@ -133,7 +133,6 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       alert(`Cannot scan more ${expectedItem.materialName}. Expected quantity (${currentPartQuantity.expected}) already reached.`);
       return;
     }
-
     const formatted = {
       id: data.id || Date.now(),
       qrId: data.id || "N/A",

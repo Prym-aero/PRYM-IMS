@@ -1,7 +1,6 @@
 const Part = require('../models/produtPart'); // ✅ Make sure filename is correct
 const QR = require('../models/QR');
-const cloudinary = require("../config/Cloudinary");
-const streamifier = require("streamifier");
+const { uploadToS3, deleteFromS3 } = require("../config/S3");
 const { incrementPartsAdded, incrementPartsDispatched } = require('./dailyInventoryController');
 const { logActivity } = require('./activityController');
 
@@ -504,31 +503,31 @@ exports.uploadDispatchPDF = async (req, res) => {
             return res.status(400).json({ message: "No file provided" });
         }
 
-        // Upload buffer to Cloudinary using a stream
-        const streamUpload = (buffer) => {
-            return new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    { resource_type: "raw", folder: "dispatch-reports" },
-                    (error, result) => {
-                        if (result) resolve(result);
-                        else reject(error);
-                    }
-                );
-                streamifier.createReadStream(buffer).pipe(stream);
-            });
-        };
+        // Upload to S3
+        const fileName = file.originalname || `dispatch-report-${Date.now()}.pdf`;
+        const mimeType = file.mimetype || 'application/pdf';
 
-        const result = await streamUpload(file.buffer);
-
-        const dispatchUrl = result.secure_url;
+        const dispatchUrl = await uploadToS3(
+            file.buffer,
+            fileName,
+            mimeType,
+            'dispatch-reports'
+        );
 
         // Optional: Save to database
         // await Dispatch.create({ allotmentNo: req.body.allotmentNo, pdfUrl: dispatchUrl });
 
-        res.status(200).json({ message: "PDF uploaded", url: dispatchUrl });
+        res.status(200).json({
+            message: "PDF uploaded successfully",
+            url: dispatchUrl,
+            fileName: fileName
+        });
     } catch (err) {
-        console.error("Cloudinary upload failed:", err);
-        res.status(500).json({ message: "Upload failed" });
+        console.error("S3 upload failed:", err);
+        res.status(500).json({
+            message: "Upload failed",
+            error: err.message
+        });
     }
 };
 
@@ -540,26 +539,45 @@ exports.UploadImage = async (req, res) => {
             return res.status(400).json({ message: "No file provided" });
         }
 
-        // Upload buffer to Cloudinary using a stream
-        const streamUpload = (buffer) => {
-            return new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    { resource_type: "image", folder: "part-images" },
-                    (error, result) => {
-                        if (result) resolve(result);
-                        else reject(error);
-                    }
-                );
-                streamifier.createReadStream(buffer).pipe(stream);
+        // Validate file type
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            return res.status(400).json({
+                message: "Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed."
             });
-        };
+        }
 
-        const result = await streamUpload(file.buffer);
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            return res.status(400).json({
+                message: "File too large. Maximum size is 10MB."
+            });
+        }
 
-        res.status(200).json({ message: "Image uploaded", imageUrl: result.secure_url });
+        // Upload to S3
+        const fileName = file.originalname || `image-${Date.now()}.jpg`;
+        const mimeType = file.mimetype;
+
+        const imageUrl = await uploadToS3(
+            file.buffer,
+            fileName,
+            mimeType,
+            'part-images'
+        );
+
+        res.status(200).json({
+            message: "Image uploaded successfully",
+            imageUrl: imageUrl,
+            url: imageUrl, // For backward compatibility
+            fileName: fileName
+        });
     } catch (err) {
-        console.error("Cloudinary upload failed:", err);
-        res.status(500).json({ message: "Upload failed" });
+        console.error("S3 upload failed:", err);
+        res.status(500).json({
+            message: "Upload failed",
+            error: err.message
+        });
     }
 }
 

@@ -45,7 +45,17 @@ const ERPQRScanner = () => {
     operationDate: "7/15/2025",
     operatorName: "",
     operationType: "qc_validation", // New field for operation type
+    dnsJobCard: "", // New field for DNS/Job Card
   });
+
+  // New state for enhanced features
+  const [scanningMode, setScanningMode] = useState("part"); // "part" or "product"
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productParts, setProductParts] = useState([]);
+  const [scannedProductParts, setScannedProductParts] = useState([]);
+  const [dnsJobCards, setDnsJobCards] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [currentScanningSession, setCurrentScanningSession] = useState(null);
 
   const [devices, setDevices] = useState([
     { id: 1, name: "Scanner #1", status: "Active" },
@@ -110,6 +120,8 @@ const ERPQRScanner = () => {
 
     fetchQRIds();
     fetchParts();
+    fetchProducts();
+    fetchDnsJobCards();
   }, [])
 
   // Fetch validated parts when operation type changes to store_inward
@@ -134,6 +146,36 @@ const ERPQRScanner = () => {
     }
   };
 
+  // Fetch products for dropdown
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/product`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      setProducts(res.data.products || []);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    }
+  };
+
+  // Fetch DNS/Job Cards for dropdown
+  const fetchDnsJobCards = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ERP/dns-job-cards/dropdown`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      setDnsJobCards(res.data.data || []);
+    } catch (err) {
+      console.error('Error fetching DNS/Job Cards:', err);
+    }
+  };
+
   // Handle part selection from dropdown
   const handlePartSelection = (partId) => {
     setSelectedPartId(partId);
@@ -147,6 +189,58 @@ const ERPQRScanner = () => {
         serialPartNumber: selectedPart.part_serial_prefix,
       }));
     }
+  };
+
+  // Handle product selection
+  const handleProductSelection = (productId) => {
+    const product = products.find(p => p._id === productId);
+    if (product) {
+      setSelectedProduct(product);
+      setProductParts(product.parts || []);
+      setScannedProductParts([]);
+
+      // Update session data
+      setSessionData(prev => ({
+        ...prev,
+        totalExpected: product.parts ? product.parts.reduce((sum, part) => sum + part.quantity, 0) : 0,
+        partName: `Product: ${product.product_name}`,
+        part_number: `PRODUCT-${product._id}`,
+      }));
+    }
+  };
+
+  // Handle scanning mode change
+  const handleScanningModeChange = (mode) => {
+    setScanningMode(mode);
+
+    // Reset selections when changing mode
+    if (mode === "part") {
+      setSelectedProduct(null);
+      setProductParts([]);
+      setScannedProductParts([]);
+    } else {
+      setSelectedPartId("");
+    }
+
+    // Reset session data
+    setSessionData(prev => ({
+      ...prev,
+      partName: "",
+      part_number: "",
+      serialPartNumber: "",
+      totalExpected: 0,
+      scannedCount: 0,
+      remaining: 0,
+      progress: 0,
+    }));
+  };
+
+  // Handle DNS/Job Card selection
+  const handleDnsJobCardSelection = (dnsJobCard) => {
+    setSessionData(prev => ({
+      ...prev,
+      dnsJobCard: dnsJobCard,
+    }));
   };
 
   const formatDateForInput = (dateStr) => {
@@ -173,7 +267,136 @@ const ERPQRScanner = () => {
     }
   };
 
+  // Create scanning session when starting
+  const createScanningSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
 
+      const sessionPayload = {
+        operationType: sessionData.operationType,
+        dnsJobCard: sessionData.dnsJobCard,
+        dnsJobCardType: 'dns_serial', // Default to DNS serial
+        selectedProduct: selectedProduct ? {
+          productId: selectedProduct._id,
+          productName: selectedProduct.product_name
+        } : null,
+        notes: `Scanning session for ${scanningMode === 'product' ? 'product' : 'individual parts'}`,
+        deviceInfo: {
+          userAgent: navigator.userAgent,
+          location: window.location.href
+        }
+      };
+
+      const response = await axios.post(
+        `${API_URL}/api/ERP/scanning/sessions`,
+        sessionPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setCurrentScanningSession(response.data.data);
+        return response.data.data;
+      }
+    } catch (error) {
+      console.error('Error creating scanning session:', error);
+      toast.error('Failed to create scanning session');
+      return null;
+    }
+  };
+
+  // Add scanned item to session
+  const addItemToScanningSession = async (scannedItem) => {
+    if (!currentScanningSession) return;
+
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await axios.post(
+        `${API_URL}/api/ERP/scanning/sessions/${currentScanningSession._id}/items`,
+        {
+          qrId: scannedItem.id,
+          partId: scannedItem.partId,
+          partName: scannedItem.part_name,
+          partNumber: scannedItem.part_number,
+          serialNumber: scannedItem.serialPartNumber,
+          status: getTargetStatus(),
+          previousStatus: scannedItem.previousStatus
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setCurrentScanningSession(response.data.data);
+
+        // Update scanned product parts if in product mode
+        if (scanningMode === 'product' && selectedProduct) {
+          updateScannedProductParts(scannedItem);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding item to session:', error);
+    }
+  };
+
+  // Update scanned product parts tracking
+  const updateScannedProductParts = (scannedItem) => {
+    setScannedProductParts(prev => {
+      const updated = [...prev];
+      const existingIndex = updated.findIndex(item =>
+        item.part_name === scannedItem.part_name &&
+        item.part_number === scannedItem.part_number
+      );
+
+      if (existingIndex >= 0) {
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          scannedCount: updated[existingIndex].scannedCount + 1,
+          lastScanned: new Date().toISOString()
+        };
+      } else {
+        // Find the expected part info
+        const expectedPart = productParts.find(part =>
+          part.part_name === scannedItem.part_name ||
+          part.part_number === scannedItem.part_number
+        );
+
+        updated.push({
+          part_name: scannedItem.part_name,
+          part_number: scannedItem.part_number,
+          expectedQuantity: expectedPart?.quantity || 1,
+          scannedCount: 1,
+          lastScanned: new Date().toISOString(),
+          isExpected: !!expectedPart
+        });
+      }
+
+      return updated;
+    });
+  };
+
+  // Get target status based on operation type
+  const getTargetStatus = () => {
+    switch (sessionData.operationType) {
+      case 'qc_validation':
+        return 'validated';
+      case 'store_inward':
+        return 'in-stock';
+      case 'store_outward':
+        return 'used';
+      default:
+        return 'validated';
+    }
+  };
 
   const handleAddToInventory = async (data) => {
     try {
@@ -286,6 +509,19 @@ const ERPQRScanner = () => {
       return;
     }
 
+    // ✅ Product scanning validation
+    if (scanningMode === 'product' && selectedProduct) {
+      const isExpectedPart = productParts.some(part =>
+        part.part_name === data.part_name ||
+        part.part_number === data.part_number
+      );
+
+      if (!isExpectedPart) {
+        toast.error(`"${data.part_name}" is not part of the selected product!`);
+        return;
+      }
+    }
+
     // Create initial formatted data
     let formatted = {
       id: data.id || Date.now(),
@@ -298,6 +534,8 @@ const ERPQRScanner = () => {
       image: sessionData.partImage || "",
       status: "Success", // Default status
       scannedBy: sessionData.operatorName || "Scanner",
+      partId: data.partId,
+      previousStatus: data.status,
     };
 
     // ✅ Try to add to inventory and get the actual status
@@ -306,6 +544,11 @@ const ERPQRScanner = () => {
     // Update status based on backend response
     if (inventoryResult) {
       formatted.status = inventoryResult.status;
+    }
+
+    // ✅ Add to scanning session if active
+    if (currentScanningSession && formatted.status === "Success") {
+      await addItemToScanningSession(formatted);
     }
 
     // ✅ Add scanned item to state (even if duplicate, for tracking)
@@ -482,109 +725,161 @@ const ERPQRScanner = () => {
                 <h2 className="text-lg font-semibold mb-4">
                   Start New Scan Session
                 </h2>
-                <div className="space-y-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">
-                      Operation Type
-                    </label>
-                    <select
-                      value={sessionData.operationType}
-                      onChange={(e) => setSessionData(prev => ({
-                        ...prev,
-                        operationType: e.target.value
-                      }))}
-                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="qc_validation">QC Validation</option>
-                      <option value="store_inward">Store Inward</option>
-                      <option value="store_outward">Store Outward</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">Select Part</label>
-                    <select
-                      value={selectedPartId}
-                      onChange={(e) => handlePartSelection(e.target.value)}
-                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">-- Select a Part --</option>
-                      {partsList.map((part) => (
-                        <option key={part._id} value={part._id}>
-                          {part.part_name} ({part.part_number})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">Part Name</label>
-                    <input
-                      type="text"
-                      value={sessionData.partName}
-                      readOnly
-                      className="w-full p-2 border rounded-lg bg-gray-50 text-gray-700"
-                      placeholder="Auto-filled when part is selected"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">Part Number</label>
-                    <input
-                      type="text"
-                      value={sessionData.part_number}
-                      readOnly
-                      className="w-full p-2 border rounded-lg bg-gray-50 text-gray-700"
-                      placeholder="Auto-filled when part is selected"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">
-                      Serial Part Number
-                    </label>
-                    <input
-                      type="text"
-                      value={sessionData.serialPartNumber || ""}
-                      onChange={(e) =>
-                        setSessionData((prev) => ({
+                <div className="space-y-4">
+                  {/* Operation Type */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Operation Type
+                      </label>
+                      <select
+                        value={sessionData.operationType}
+                        onChange={(e) => setSessionData(prev => ({
                           ...prev,
-                          serialPartNumber: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 border rounded-lg"
-                    />
+                          operationType: e.target.value
+                        }))}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="qc_validation">QC Validation</option>
+                        <option value="store_inward">Store Inward</option>
+                        <option value="store_outward">Store Outward</option>
+                      </select>
+                    </div>
+
+                    {/* Scanning Mode Toggle */}
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Scanning Mode
+                      </label>
+                      <select
+                        value={scanningMode}
+                        onChange={(e) => handleScanningModeChange(e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="part">Individual Parts</option>
+                        <option value="product">Whole Product</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm text-gray-600">
-                      Total Expected
-                    </label>
-                    <input
-                      type="number"
-                      value={sessionData.totalExpected}
-                      onChange={(e) =>
-                        setSessionData((prev) => ({
-                          ...prev,
-                          totalExpected: parseInt(e.target.value),
-                          remaining: parseInt(e.target.value),
-                          scannedCount: 0,
-                          progress: 0,
-                        }))
-                      }
-                      className="w-full p-2 border rounded-lg"
-                    />
+
+                  {/* Part/Product Selection */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {scanningMode === "part" ? (
+                      <div>
+                        <label className="text-sm text-gray-600">Select Part</label>
+                        <select
+                          value={selectedPartId}
+                          onChange={(e) => handlePartSelection(e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">-- Select a Part --</option>
+                          {partsList.map((part) => (
+                            <option key={part._id} value={part._id}>
+                              {part.part_name} ({part.part_number})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-sm text-gray-600">Select Product</label>
+                        <select
+                          value={selectedProduct?._id || ""}
+                          onChange={(e) => handleProductSelection(e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">-- Select a Product --</option>
+                          {products.map((product) => (
+                            <option key={product._id} value={product._id}>
+                              {product.product_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* DNS/Job Card Selection */}
+                    <div>
+                      <label className="text-sm text-gray-600">DNS/Job Card</label>
+                      <select
+                        value={sessionData.dnsJobCard}
+                        onChange={(e) => handleDnsJobCardSelection(e.target.value)}
+                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">-- Select DNS/Job Card --</option>
+                        {dnsJobCards.map((card) => (
+                          <option key={card.value} value={card.value}>
+                            {card.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm text-gray-600">
-                      Operator Name
-                    </label>
-                    <input
-                      type="text"
-                      value={sessionData.operatorName}
-                      onChange={(e) =>
-                        setSessionData((prev) => ({
-                          ...prev,
-                          operatorName: e.target.value,
-                        }))
-                      }
-                      className="w-full p-2 border rounded-lg"
-                    />
+
+                  {/* Display fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-600">Part/Product Name</label>
+                      <input
+                        type="text"
+                        value={sessionData.partName}
+                        readOnly
+                        className="w-full p-2 border rounded-lg bg-gray-50 text-gray-700"
+                        placeholder="Auto-filled when selection is made"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Part/Product Number</label>
+                      <input
+                        type="text"
+                        value={sessionData.part_number}
+                        readOnly
+                        className="w-full p-2 border rounded-lg bg-gray-50 text-gray-700"
+                        placeholder="Auto-filled when selection is made"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Operator and Expected Count */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-600">
+                        Operator Name
+                      </label>
+                      <input
+                        type="text"
+                        value={sessionData.operatorName}
+                        onChange={(e) =>
+                          setSessionData((prev) => ({
+                            ...prev,
+                            operatorName: e.target.value,
+                          }))
+                        }
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="Enter operator name"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">
+                        Total Expected
+                      </label>
+                      <input
+                        type="number"
+                        value={sessionData.totalExpected}
+                        onChange={(e) =>
+                          setSessionData((prev) => ({
+                            ...prev,
+                            totalExpected: parseInt(e.target.value) || 0,
+                            remaining: parseInt(e.target.value) || 0,
+                            scannedCount: 0,
+                            progress: 0,
+                          }))
+                        }
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="Number of items to scan"
+                        disabled={scanningMode === 'product' && selectedProduct}
+                      />
+                    </div>
                   </div>
                   {/* <div>
                     <label className="text-sm text-gray-600">Part Image</label>
@@ -610,30 +905,45 @@ const ERPQRScanner = () => {
                   </div> */}
                 </div>
                 <button
-                  onClick={() => {
-                    // Validate all required fields
-                    if (!sessionData.partName.trim()) {
-                      toast.error("Please enter Part Name");
-                      return;
-                    }
-                    if (!sessionData.part_number.trim()) {
-                      toast.error("Please enter Part Number");
-                      return;
-                    }
-                    if (!sessionData.serialPartNumber.trim()) {
-                      toast.error("Please enter Serial Part Number");
-                      return;
-                    }
+                  onClick={async () => {
+                    // Enhanced validation for new features
                     if (!sessionData.operatorName.trim()) {
                       toast.error("Please enter Operator Name");
                       return;
                     }
-                    // if (!sessionData.partImage) {
-                    //   toast.error("Please upload Part Image");
-                    //   return;
-                    // }
+
+                    if (!sessionData.dnsJobCard) {
+                      toast.error("Please select a DNS/Job Card");
+                      return;
+                    }
+
+                    if (scanningMode === "part") {
+                      if (!selectedPartId) {
+                        toast.error("Please select a part");
+                        return;
+                      }
+                      if (!sessionData.partName.trim()) {
+                        toast.error("Please select a valid part");
+                        return;
+                      }
+                    }
+
+                    if (scanningMode === "product") {
+                      if (!selectedProduct) {
+                        toast.error("Please select a product");
+                        return;
+                      }
+                    }
+
                     if (!sessionData.totalExpected || sessionData.totalExpected <= 0) {
                       toast.error("Please enter a valid Total Expected quantity");
+                      return;
+                    }
+
+                    // Create scanning session
+                    const session = await createScanningSession();
+                    if (!session) {
+                      toast.error("Failed to create scanning session");
                       return;
                     }
 
@@ -643,7 +953,7 @@ const ERPQRScanner = () => {
                     setSessionData((prev) => ({
                       ...prev,
                       startedAt: `${formattedDate} - ${formattedTime}`,
-                      sessionId: `SESSION-${Math.random()
+                      sessionId: session.activityId || `SESSION-${Math.random()
                         .toString(36)
                         .substring(2, 8)
                         .toUpperCase()}`,
@@ -656,6 +966,68 @@ const ERPQRScanner = () => {
                 >
                   Start Session
                 </button>
+              </div>
+            )}
+
+            {/* Product Parts Display - Third Box */}
+            {!isSessionStarted && scanningMode === "product" && selectedProduct && productParts.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-lg font-semibold mb-4">
+                  Product Parts to Scan
+                </h2>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {productParts.map((part, index) => {
+                    const scannedPart = scannedProductParts.find(sp =>
+                      sp.part_name === part.part_name || sp.part_number === part.part_number
+                    );
+                    const scannedCount = scannedPart?.scannedCount || 0;
+                    const isComplete = scannedCount >= part.quantity;
+
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 border rounded-lg ${
+                          isComplete
+                            ? 'bg-green-50 border-green-200'
+                            : scannedCount > 0
+                              ? 'bg-yellow-50 border-yellow-200'
+                              : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-gray-800">{part.part_name}</p>
+                            <p className="text-sm text-gray-600">{part.part_number}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-sm font-medium ${
+                              isComplete ? 'text-green-600' : 'text-gray-600'
+                            }`}>
+                              {scannedCount} / {part.quantity}
+                            </p>
+                            <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  isComplete ? 'bg-green-500' : 'bg-blue-500'
+                                }`}
+                                style={{
+                                  width: `${Math.min((scannedCount / part.quantity) * 100, 100)}%`
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Total Parts:</strong> {productParts.length} |
+                    <strong> Total Quantity:</strong> {productParts.reduce((sum, part) => sum + part.quantity, 0)} |
+                    <strong> Scanned:</strong> {scannedProductParts.reduce((sum, part) => sum + part.scannedCount, 0)}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -751,6 +1123,85 @@ const ERPQRScanner = () => {
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Reset Scan Session
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Product Scanning Progress - During Session */}
+            {isSessionStarted && scanningMode === "product" && selectedProduct && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-lg font-semibold mb-4">
+                  Product Scanning Progress
+                </h2>
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {productParts.map((part, index) => {
+                    const scannedPart = scannedProductParts.find(sp =>
+                      sp.part_name === part.part_name || sp.part_number === part.part_number
+                    );
+                    const scannedCount = scannedPart?.scannedCount || 0;
+                    const isComplete = scannedCount >= part.quantity;
+                    const isInProgress = scannedCount > 0 && scannedCount < part.quantity;
+
+                    return (
+                      <div
+                        key={index}
+                        className={`p-3 border rounded-lg transition-all duration-300 ${
+                          isComplete
+                            ? 'bg-green-50 border-green-300 shadow-sm'
+                            : isInProgress
+                              ? 'bg-yellow-50 border-yellow-300 shadow-sm'
+                              : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              {isComplete && <CheckCircle className="w-4 h-4 text-green-600 mr-2" />}
+                              {isInProgress && <RefreshCw className="w-4 h-4 text-yellow-600 mr-2" />}
+                              <div>
+                                <p className="font-medium text-gray-800">{part.part_name}</p>
+                                <p className="text-sm text-gray-600">{part.part_number}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right ml-4">
+                            <p className={`text-sm font-medium ${
+                              isComplete ? 'text-green-600' : isInProgress ? 'text-yellow-600' : 'text-gray-600'
+                            }`}>
+                              {scannedCount} / {part.quantity}
+                            </p>
+                            <div className="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                  isComplete ? 'bg-green-500' : isInProgress ? 'bg-yellow-500' : 'bg-gray-300'
+                                }`}
+                                style={{
+                                  width: `${Math.min((scannedCount / part.quantity) * 100, 100)}%`
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                        {scannedPart?.lastScanned && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            Last scanned: {new Date(scannedPart.lastScanned).toLocaleTimeString()}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-blue-800">
+                      <strong>Overall Progress:</strong> {scannedProductParts.reduce((sum, part) => sum + part.scannedCount, 0)} / {productParts.reduce((sum, part) => sum + part.quantity, 0)}
+                    </span>
+                    <span className="text-blue-600 font-medium">
+                      {productParts.reduce((sum, part) => sum + part.quantity, 0) > 0
+                        ? Math.round((scannedProductParts.reduce((sum, part) => sum + part.scannedCount, 0) / productParts.reduce((sum, part) => sum + part.quantity, 0)) * 100)
+                        : 0}%
+                    </span>
                   </div>
                 </div>
               </div>

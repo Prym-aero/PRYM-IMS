@@ -7,6 +7,7 @@ import {
   Settings,
   LogOut,
   BarChart3,
+  FileText,
 } from "lucide-react";
 import axios from "axios";
 import { useUser } from "../context/userContext";
@@ -55,6 +56,12 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: Package,
       roles: ["admin", "inventory"],
     },
+    {
+      id: "scanningActivities",
+      label: "Scanning Records",
+      icon: FileText,
+      roles: ["admin", "scanner", "addProduct"],
+    },
     // {
     //   id: "admin",
     //   label: "Admin Panel",
@@ -64,10 +71,15 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-64 bg-sky-500 text-white h-screen flex flex-col flex-shrink-0">
+    <div className="w-64 lg:w-64 md:w-20 sm:w-16 bg-sky-500 text-white h-screen flex flex-col flex-shrink-0 transition-all duration-300">
       {/* Header */}
       <div className="p-3 border-b border-sky-400 flex-shrink-0">
-        <h1 className="text-[18px] font-bold">PRYM AEROSPACE IMS</h1>
+        <h1 className="text-[18px] lg:text-[18px] md:text-[12px] sm:text-[10px] font-bold lg:block md:hidden sm:hidden">
+          PRYM AEROSPACE IMS
+        </h1>
+        <h1 className="text-[12px] font-bold lg:hidden md:block sm:block text-center">
+          PRYM
+        </h1>
       </div>
 
       {/* Navigation Menu */}
@@ -79,12 +91,20 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center px-6 py-3 text-left hover:bg-sky-400 transition-colors ${activeTab === item.id ? "bg-sky-600" : ""
+                onClick={() => {
+                  if (item.id === 'scanningActivities') {
+                    navigate('/scanning-activities');
+                  } else {
+                    setActiveTab(item.id);
+                  }
+                }}
+                className={`w-full flex items-center px-6 lg:px-6 md:px-2 sm:px-1 py-3 text-left hover:bg-sky-400 transition-colors ${activeTab === item.id ? "bg-sky-600" : ""
                   }`}
               >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.label}
+                <Icon className="mr-3 lg:mr-3 md:mr-0 sm:mr-0 h-5 w-5 lg:h-5 lg:w-5 md:h-4 md:w-4 sm:h-4 sm:w-4" />
+                <span className="lg:block md:hidden sm:hidden text-sm lg:text-base">
+                  {item.label}
+                </span>
               </button>
             );
           })}
