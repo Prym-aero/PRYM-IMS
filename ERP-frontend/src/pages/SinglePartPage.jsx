@@ -50,6 +50,8 @@ const SinglePartPage = () => {
     dimensions: "",
   });
 
+  const [webLoading, setWebLoading] = useState(false);
+
   // Check edit permissions
   const checkEditPermission = async () => {
     try {
@@ -75,6 +77,7 @@ const SinglePartPage = () => {
   useEffect(() => {
     const fetchPart = async () => {
       try {
+        setWebLoading(true)
         const token = localStorage.getItem('token');
         const res = await axios.get(`${API_URL}/api/ERP/part/${id}`, {
           headers: {
@@ -105,10 +108,13 @@ const SinglePartPage = () => {
             grade: partData.grade || "",
             dimensions: partData.dimensions || "",
           });
+          setWebLoading(false);
         }
       } catch (err) {
         console.error("Error fetching part:", err);
         toast.error("Failed to fetch part details");
+      } finally {
+         setWebLoading(false);
       }
     };
 
@@ -360,6 +366,22 @@ const SinglePartPage = () => {
       setIsLoading(false);
     }
   };
+
+  if (webLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white relative">
+        {/* Spinning Circle */}
+        <div className="w-[320px] h-[320px] rounded-full border-[6px] border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin absolute"></div>
+
+        {/* Static Image */}
+        <img
+          src="/PRYM_Aerospace_Logo-02-removebg-preview.png"
+          alt="Loading..."
+          className="w-[300px] h-[200px] object-contain relative z-10"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen max-w-[900px] flex flex-col mx-auto">

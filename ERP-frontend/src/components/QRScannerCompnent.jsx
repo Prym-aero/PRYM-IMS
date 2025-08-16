@@ -400,7 +400,8 @@ const ERPQRScanner = () => {
 
   const handleAddToInventory = async (data) => {
     try {
-      // All operations now go through the same endpoint with operationType
+      
+      console.log(sessionData);
       const token = localStorage.getItem('token');
       const res = await axios.post(
         `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
