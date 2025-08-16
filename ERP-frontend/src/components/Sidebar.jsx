@@ -62,7 +62,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       icon: FileText,
       roles: ["admin", "scanner"],
     },
-    
   ];
 
   return (
