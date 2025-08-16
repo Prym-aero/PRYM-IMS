@@ -408,7 +408,7 @@ const ERPQRScanner = () => {
           id: data.id,
           part_name: data.part_name,
           part_number: data.part_number,
-          serialPartNumber: data.serialPartNumber,
+          serialPartNumber: data.serialPartNumber || sessionData.serialPartNumber,
           status: sessionData.operationType === 'qc_validation' ? "validated" : undefined,
           date: data.date,
           partImage: data.image || sessionData.partImage || "",
