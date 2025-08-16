@@ -57,7 +57,7 @@ const SingleProductPage = () => {
         setEditPermission(res.data);
       }
     } catch (err) {
-      console.error("Error checking edit permission:", err);
+      // console.error("Error checking edit permission:", err);
       setEditPermission({ canEdit: false, message: "Unable to check edit permissions", isAdmin: false });
     }
   };
@@ -86,7 +86,7 @@ const SingleProductPage = () => {
           });
         }
       } catch (err) {
-        console.error("Error fetching product:", err);
+        // console.error("Error fetching product:", err);
         toast.error("Failed to fetch product details");
       }
     };
@@ -109,7 +109,7 @@ const SingleProductPage = () => {
         setAvailableParts(res.data.parts || []);
       }
     } catch (err) {
-      console.error("Error fetching parts:", err);
+      // console.error("Error fetching parts:", err);
     }
   };
 
@@ -188,7 +188,7 @@ const SingleProductPage = () => {
         toast.success("Image uploaded successfully!");
       }
     } catch (err) {
-      console.error("Error uploading image:", err);
+      // console.error("Error uploading image:", err);
       toast.error("Failed to upload image");
     } finally {
       setIsUploadingImage(false);
@@ -212,7 +212,7 @@ const SingleProductPage = () => {
         checkEditPermission();
       }
     } catch (err) {
-      console.error("Error updating product:", err);
+      // console.error("Error updating product:", err);
       if (err.response?.status === 403) {
         toast.error(err.response.data.message || "Edit not allowed");
         setShowEditModal(false);

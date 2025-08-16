@@ -46,7 +46,7 @@ const DailyInventoryManager = () => {
         setCurrentStock(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching current stock:', error);
+      // console.error('Error fetching current stock:', error);
       toast.error('Failed to fetch current stock');
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ const DailyInventoryManager = () => {
         setAddDescription('');
       }
     } catch (error) {
-      console.error('Error adding parts:', error);
+      // console.error('Error adding parts:', error);
       toast.error(error.response?.data?.message || 'Failed to add parts');
     } finally {
       setLoading(false);
@@ -114,7 +114,7 @@ const DailyInventoryManager = () => {
         setDispatchDescription('');
       }
     } catch (error) {
-      console.error('Error dispatching parts:', error);
+      // console.error('Error dispatching parts:', error);
       toast.error(error.response?.data?.message || 'Failed to dispatch parts');
     } finally {
       setLoading(false);
@@ -136,7 +136,7 @@ const DailyInventoryManager = () => {
         toast.success('Daily report fetched successfully');
       }
     } catch (error) {
-      console.error('Error fetching daily report:', error);
+      // console.error('Error fetching daily report:', error);
       if (error.response?.status === 404) {
         toast.error('No data found for selected date');
         setDailyReport(null);
@@ -164,7 +164,7 @@ const DailyInventoryManager = () => {
         fetchCurrentStock();
       }
     } catch (error) {
-      console.error('Error opening daily stock:', error);
+      // console.error('Error opening daily stock:', error);
       toast.error(error.response?.data?.message || 'Failed to open daily stock');
     } finally {
       setLoading(false);
@@ -187,7 +187,7 @@ const DailyInventoryManager = () => {
         fetchCurrentStock();
       }
     } catch (error) {
-      console.error('Error closing daily stock:', error);
+      // console.error('Error closing daily stock:', error);
       toast.error(error.response?.data?.message || 'Failed to close daily stock');
     } finally {
       setLoading(false);

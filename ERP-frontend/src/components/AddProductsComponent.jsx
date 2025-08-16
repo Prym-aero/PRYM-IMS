@@ -37,7 +37,7 @@ const AddProductsComponent = () => {
             });
             setPartsList(res.data.parts);
         } catch (err) {
-            console.error("Failed to fetch parts:", err);
+            // console.error("Failed to fetch parts:", err);
             toast.error("Failed to fetch parts");
         }
     };
@@ -56,7 +56,7 @@ const AddProductsComponent = () => {
             if (err.response?.status === 404) {
                 toast.error("No products found.");
             } else {
-                console.error("Failed to fetch products:", err);
+                // console.error("Failed to fetch products:", err);
                 toast.error("Error fetching products.");
             }
         }
@@ -130,7 +130,7 @@ const AddProductsComponent = () => {
             fetchProducts();
             setActiveView("productsList"); // Switch to products list after adding
         } catch (err) {
-            console.error("Product creation failed", err);
+            // console.error("Product creation failed", err);
             toast.error("Error adding product");
         }
     };

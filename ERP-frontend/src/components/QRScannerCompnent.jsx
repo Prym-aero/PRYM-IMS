@@ -113,7 +113,7 @@ const ERPQRScanner = () => {
         });
         setQrIds(res.data.scannedQRIds || []);
       } catch (err) {
-        console.error('Error fetching QR IDs:', err);
+        // console.error('Error fetching QR IDs:', err);
         // Don't show error toast on initial load, just log it
       }
     }
@@ -142,7 +142,7 @@ const ERPQRScanner = () => {
       });
       setPartsList(res.data.parts || []);
     } catch (err) {
-      console.error('Error fetching parts:', err);
+      // console.error('Error fetching parts:', err);
     }
   };
 
@@ -156,6 +156,7 @@ const ERPQRScanner = () => {
         },
       });
       setProducts(res.data.products || []);
+      // console.log(res.data.products);
     } catch (err) {
       console.error('Error fetching products:', err);
     }
@@ -172,7 +173,7 @@ const ERPQRScanner = () => {
       });
       setDnsJobCards(res.data.data || []);
     } catch (err) {
-      console.error('Error fetching DNS/Job Cards:', err);
+      // console.error('Error fetching DNS/Job Cards:', err);
     }
   };
 
@@ -206,6 +207,8 @@ const ERPQRScanner = () => {
         partName: `Product: ${product.product_name}`,
         part_number: `PRODUCT-${product._id}`,
       }));
+
+      // console.log(productParts);
     }
   };
 
@@ -262,7 +265,7 @@ const ERPQRScanner = () => {
         setValidatedParts(response.data.validatedParts);
       }
     } catch (error) {
-      console.error('Error fetching validated parts:', error);
+      // console.error('Error fetching validated parts:', error);
       toast.error('Failed to fetch validated parts');
     }
   };
@@ -303,7 +306,7 @@ const ERPQRScanner = () => {
         return response.data.data;
       }
     } catch (error) {
-      console.error('Error creating scanning session:', error);
+      // console.error('Error creating scanning session:', error);
       toast.error('Failed to create scanning session');
       return null;
     }
@@ -344,7 +347,7 @@ const ERPQRScanner = () => {
         }
       }
     } catch (error) {
-      console.error('Error adding item to session:', error);
+      // console.error('Error adding item to session:', error);
     }
   };
 
@@ -369,6 +372,8 @@ const ERPQRScanner = () => {
           part.part_name === scannedItem.part_name ||
           part.part_number === scannedItem.part_number
         );
+
+        // console.log(productParts);
 
         updated.push({
           part_name: scannedItem.part_name,
@@ -401,7 +406,7 @@ const ERPQRScanner = () => {
   const handleAddToInventory = async (data) => {
     try {
       
-      console.log(sessionData);
+      // console.log(sessionData);
       const token = localStorage.getItem('token');
       const res = await axios.post(
         `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
@@ -495,7 +500,7 @@ const ERPQRScanner = () => {
       setIsImageUploaded(true);
     } catch (err) {
       toast.error("Error uploading image: " + err.message);
-      console.error("Error uploading image: ", err);
+      // console.error("Error uploading image: ", err);
     }
   };
 
@@ -997,7 +1002,7 @@ const ERPQRScanner = () => {
                       >
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="font-medium text-gray-800">{part.part_name}</p>
+                            <p className="font-medium text-gray-500">{part.part_name}</p>
                             <p className="text-sm text-gray-600">{part.part_number}</p>
                           </div>
                           <div className="text-right">

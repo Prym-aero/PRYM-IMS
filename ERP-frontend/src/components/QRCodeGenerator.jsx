@@ -50,7 +50,7 @@ const QRCodeGenerator = () => {
       setPartsList(res.data.parts);
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch parts:", err);
+      // console.error("Failed to fetch parts:", err);
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ const QRCodeGenerator = () => {
       if (err.response?.status === 404) {
         toast.error("No products found.");
       } else {
-        console.error("Failed to fetch products:", err);
+        // console.error("Failed to fetch products:", err);
         toast.error("Error fetching products.");
       }
     } finally {
@@ -91,7 +91,7 @@ const QRCodeGenerator = () => {
       setCount(res.data.counts.generatedCount);
       setLoading(false)
     } catch (err) {
-      console.error("Failed to fetch QR count:", err);
+      // console.error("Failed to fetch QR count:", err);
       // setCount(1); // Default to 1 if fetch fails
     } finally {
        setLoading(false)
@@ -214,7 +214,7 @@ const QRCodeGenerator = () => {
         setCurrentPage(1); // Reset to first page
       }
     } catch (error) {
-      console.error("Error generating QR codes:", error);
+      // console.error("Error generating QR codes:", error);
       toast.error("Failed to generate QR codes");
     } finally {
       setIsGenerating(false);
@@ -302,7 +302,7 @@ const QRCodeGenerator = () => {
       toast.success(`PDF exported successfully with ${qrCodes.length} QR codes!`);
 
     } catch (error) {
-      console.error("Error exporting PDF:", error);
+      // console.error("Error exporting PDF:", error);
       toast.error("Failed to export PDF");
     } finally {
       setIsExporting(false);

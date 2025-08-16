@@ -53,7 +53,7 @@ const ERPMDashboard = () => {
         setDailyInventory(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching daily inventory:', error);
+      // console.error('Error fetching daily inventory:', error);
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ const ERPMDashboard = () => {
         toast.success('Daily stock updated with real inventory data!');
       }
     } catch (error) {
-      console.error('Error force reopening daily stock:', error);
+      // console.error('Error force reopening daily stock:', error);
       toast.error('Failed to update daily stock');
     } finally {
       setLoading(false);
@@ -98,7 +98,7 @@ const ERPMDashboard = () => {
         setRecentActivities(response.data.activities);
       }
     } catch (error) {
-      console.error('Error fetching recent activities:', error);
+      // console.error('Error fetching recent activities:', error);
     } finally {
       setActivitiesLoading(false);
     }
@@ -118,7 +118,7 @@ const ERPMDashboard = () => {
         setValidatedPartsCount(response.data.count || 0);
       }
     } catch (error) {
-      console.error('Error fetching validated parts count:', error);
+      // console.error('Error fetching validated parts count:', error);
     }
   };
 

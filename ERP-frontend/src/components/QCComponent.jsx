@@ -67,9 +67,9 @@ const QCComponent = () => {
         setFetchLoading(false)
       }
     } catch (error) {
-      console.error('Error fetching parts:', error);
+      // console.error('Error fetching parts:', error);
     } finally {
-       setFetchLoading(false)
+      setFetchLoading(false)
     }
   };
 
@@ -128,7 +128,7 @@ const QCComponent = () => {
         },
       });
 
-      console.log(response.data)
+      // console.log(response.data)
 
       // Check for both 'url' and 'imageUrl' in response
       const imageUrl = response.data.url || response.data.imageUrl;
@@ -146,14 +146,14 @@ const QCComponent = () => {
               ...prev,
               part_image: imageUrl
             };
-            console.log('Updated part form data with image:', newData);
+            // console.log('Updated part form data with image:', newData);
             return newData;
           });
         }
         toast.success('Image uploaded successfully!');
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      // console.error('Error uploading image:', error);
       toast.error('Failed to upload image');
     } finally {
       setImageUploading(false);
@@ -197,12 +197,29 @@ const QCComponent = () => {
   // Handle part selection change in product
   const handlePartSelectionChange = (index, field, value) => {
     const newParts = [...productFormData.parts];
-    newParts[index][field] = value;
-    setProductFormData(prev => ({
+
+    // If the field being updated is the part_id
+    if (field === "part_id") {
+      const selectedPart = parts.find((p) => p._id === value);
+
+      newParts[index] = {
+        ...newParts[index],
+        part_id: value, // keep part_id for reference
+        id: selectedPart ? selectedPart._id : "",
+        part_name: selectedPart ? selectedPart.part_name : "",
+        quantity: newParts[index]?.quantity || 1, // default quantity
+      };
+    } else {
+      // For other fields like quantity updates
+      newParts[index][field] = value;
+    }
+
+    setProductFormData((prev) => ({
       ...prev,
-      parts: newParts
+      parts: newParts,
     }));
   };
+
 
   // Handle technical specifications changes
   const handleSpecChange = (index, field, value) => {
@@ -267,7 +284,7 @@ const QCComponent = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!formData.part_name || !formData.part_number) {
       toast.error('Part name and part number are required');
@@ -276,7 +293,7 @@ const QCComponent = () => {
 
     try {
       setLoading(true);
-      
+
       // Filter out empty specifications - only include specs with both property and answer
       const validSpecs = formData.technical_specifications.filter(
         spec => spec.property && spec.property.trim() && spec.answer && spec.answer.trim()
@@ -287,7 +304,7 @@ const QCComponent = () => {
         technical_specifications: validSpecs
       };
 
-      console.log('Submitting part data:', submitData);
+      // console.log('Submitting part data:', submitData);
       const token = localStorage.getItem('token');
       const response = await axios.post(`${API_URL}/api/ERP/part`, submitData, {
         headers: {
@@ -303,12 +320,12 @@ const QCComponent = () => {
         fetchParts(); // Refresh parts list
       }
     } catch (error) {
-      console.error('Error adding part:', error);
+      // console.error('Error adding part:', error);
 
       // Show specific error message from backend
       const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          'Failed to add part. Please try again.';
+        error.response?.data?.error ||
+        'Failed to add part. Please try again.';
 
       // If there are validation errors, show them
       if (error.response?.data?.errors) {
@@ -349,7 +366,7 @@ const QCComponent = () => {
         fetchProducts(); // Refresh products list
       }
     } catch (error) {
-      console.error('Error adding product:', error);
+      // console.error('Error adding product:', error);
       toast.error(error.response?.data?.message || 'Failed to add product');
     } finally {
       setLoading(false);
@@ -472,11 +489,10 @@ const QCComponent = () => {
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800 mb-1">{product.product_name}</h4>
                       <p className="text-sm text-gray-600 mb-2">{product.product_model || 'No model specified'}</p>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        product.category === 'mechanical' ? 'bg-blue-100 text-blue-800' :
-                        product.category === 'electrical' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.category === 'mechanical' ? 'bg-blue-100 text-blue-800' :
+                          product.category === 'electrical' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                        }`}>
                         {product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'General'}
                       </span>
                     </div>
@@ -545,7 +561,7 @@ const QCComponent = () => {
                     <Info className="w-5 h-5 mr-2 text-blue-600" />
                     Basic Information
                   </h3>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Part Name *
@@ -563,7 +579,7 @@ const QCComponent = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                       Model
+                      Model
                     </label>
                     <input
                       type="text"
@@ -611,7 +627,7 @@ const QCComponent = () => {
                 {/* Additional Details */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-gray-800">Additional Details</h3>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Part Weight

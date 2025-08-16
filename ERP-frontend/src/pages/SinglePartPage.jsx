@@ -69,7 +69,7 @@ const SinglePartPage = () => {
         setEditPermission(res.data);
       }
     } catch (err) {
-      console.error("Error checking edit permission:", err);
+      // console.error("Error checking edit permission:", err);
       setEditPermission({ canEdit: false, message: "Unable to check edit permissions", isAdmin: false });
     }
   };
@@ -111,7 +111,7 @@ const SinglePartPage = () => {
           setWebLoading(false);
         }
       } catch (err) {
-        console.error("Error fetching part:", err);
+        // console.error("Error fetching part:", err);
         toast.error("Failed to fetch part details");
       } finally {
          setWebLoading(false);
@@ -255,7 +255,7 @@ const SinglePartPage = () => {
       }
     } catch (err) {
       toast.error("Error uploading image: " + err.message);
-      console.error("Error uploading image: ", err);
+      // console.error("Error uploading image: ", err);
     } finally {
       setIsUploadingMainImage(false);
     }
@@ -287,7 +287,7 @@ const SinglePartPage = () => {
         toast.success("Image uploaded successfully!");
       }
     } catch (err) {
-      console.error("Error uploading image:", err);
+      // console.error("Error uploading image:", err);
       toast.error("Failed to upload image");
     } finally {
       setIsUploadingImage(false);
@@ -331,7 +331,7 @@ const SinglePartPage = () => {
       }
     } catch (err) {
       toast.error("Error uploading image: " + err.message);
-      console.error("Error uploading image: ", err);
+      // console.error("Error uploading image: ", err);
     } finally {
       setIsUploadingImage(false);
     }
@@ -354,7 +354,7 @@ const SinglePartPage = () => {
         checkEditPermission();
       }
     } catch (err) {
-      console.error("Error updating part:", err);
+      // console.error("Error updating part:", err);
       if (err.response?.status === 403) {
         toast.error(err.response.data.message || "Edit not allowed");
         setShowEditModal(false);

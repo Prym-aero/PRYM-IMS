@@ -91,7 +91,7 @@ const EnhancedQRScanner = () => {
       setParts(partsRes.data.parts || []);
 
     } catch (error) {
-      console.error('Error fetching initial data:', error);
+      // console.error('Error fetching initial data:', error);
       toast.error('Failed to load initial data');
     } finally {
       setLoading(false);
@@ -107,11 +107,11 @@ const EnhancedQRScanner = () => {
     });
 
     socketRef.current.on('connect', () => {
-      console.log('Connected to scanner socket');
+      // console.log('Connected to scanner socket');
     });
 
     socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from scanner socket');
+      // console.log('Disconnected from scanner socket');
     });
   };
 
@@ -160,7 +160,7 @@ const EnhancedQRScanner = () => {
       }
 
     } catch (error) {
-      console.error('Error starting session:', error);
+      // console.error('Error starting session:', error);
       toast.error(error.response?.data?.message || 'Failed to start scanning session');
     } finally {
       setLoading(false);
@@ -217,7 +217,7 @@ const EnhancedQRScanner = () => {
       }
 
     } catch (error) {
-      console.error('Error processing scanned item:', error);
+      // console.error('Error processing scanned item:', error);
       toast.error(error.response?.data?.message || 'Failed to process scanned item');
     }
   };
@@ -267,7 +267,7 @@ const EnhancedQRScanner = () => {
       }
 
     } catch (error) {
-      console.error('Error completing session:', error);
+      // console.error('Error completing session:', error);
       toast.error(error.response?.data?.message || 'Failed to complete session');
     } finally {
       setLoading(false);
@@ -302,7 +302,7 @@ const EnhancedQRScanner = () => {
       }
 
     } catch (error) {
-      console.error('Error cancelling session:', error);
+      // console.error('Error cancelling session:', error);
       toast.error('Failed to cancel session');
     } finally {
       setLoading(false);

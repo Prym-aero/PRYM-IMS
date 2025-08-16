@@ -93,7 +93,7 @@ const InventoryDispatchSystem = () => {
         toast.success("PDF uploaded to server.");
       })
       .catch((err) => {
-        console.error("Upload failed", err);
+        // console.error("Upload failed", err);
         toast.error("Failed to upload PDF.");
       });
   };
@@ -181,7 +181,7 @@ const InventoryDispatchSystem = () => {
           setLoading(false)
         }
       } catch (err) {
-        console.error("Error fetching products:", err);
+        // console.error("Error fetching products:", err);
       } finally {
          setLoading(false)
       }

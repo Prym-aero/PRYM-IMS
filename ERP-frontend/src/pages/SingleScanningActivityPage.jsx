@@ -57,7 +57,7 @@ const SingleScanningActivityPage = () => {
         navigate('/scanning-activities');
       }
     } catch (error) {
-      console.error('Error fetching activity:', error);
+      // console.error('Error fetching activity:', error);
       toast.error('Failed to fetch scanning activity');
       navigate('/scanning-activities');
     } finally {

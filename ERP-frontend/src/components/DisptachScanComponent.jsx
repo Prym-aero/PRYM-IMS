@@ -1,31 +1,31 @@
-const updateInventoryForDispatch = async (item, isMatched) => {
-  console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
+// const updateInventoryForDispatch = async (item, isMatched) => {
+//   // console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
 
-  // Mock API call - replace with actual implementation
-  if (isMatched) {
-    try {
-      // Simulate API call
-      const mockResponse = {
-        status: 200,
-        data: {
-          inventoryItem: { part_name: item.part_name },
-          qrIdRemoved: true,
-          status: "Success"
-        }
-      };
+//   // Mock API call - replace with actual implementation
+//   if (isMatched) {
+//     try {
+//       // Simulate API call
+//       const mockResponse = {
+//         status: 200,
+//         data: {
+//           inventoryItem: { part_name: item.part_name },
+//           qrIdRemoved: true,
+//           status: "Success"
+//         }
+//       };
 
-    } catch (err) {
-      if (err.response?.status === 400) {
-        toast("⚠️ Item was already dispatched");
-        return { success: false, status: err.response.data.status };
-      } else {
-        toast.error("Error dispatching item");
-      }
-      console.error("Dispatch error:", err);
-      return { success: false, status: err.response?.data?.status || "error" };
-    }
-  }
-};
+//     } catch (err) {
+//       if (err.response?.status === 400) {
+//         toast("⚠️ Item was already dispatched");
+//         return { success: false, status: err.response.data.status };
+//       } else {
+//         toast.error("Error dispatching item");
+//       }
+//       // console.error("Dispatch error:", err);
+//       return { success: false, status: err.response?.data?.status || "error" };
+//     }
+//   }
+// };
 
 import React, { useState, useEffect } from "react";
 import { CheckCircle, AlertTriangle, X, RefreshCw, Package, User, Calendar, MapPin } from "lucide-react";
@@ -181,7 +181,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
   };
 
   const updateInventoryForDispatch = async (item, isMatched) => {
-    console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
+    // console.log("Updating inventory for dispatch:", item, "Matched:", isMatched);
     if (isMatched) {
       try {
         const token = localStorage.getItem('token');
@@ -220,7 +220,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
         } else {
           toast.error("Error dispatching item");
         }
-        console.error("Dispatch error:", err);
+        // console.error("Dispatch error:", err);
         return { success: false, status: err.response?.data?.status || "error" }
       }
     } else {
@@ -294,7 +294,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
           throw new Error("autoTable not available");
         }
       } catch (autoTableError) {
-        console.error("AutoTable error:", autoTableError);
+      // console.error("AutoTable error:", autoTableError);
         // Fallback if autoTable is not available
         doc.setFontSize(12);
         doc.text("Scanned Items:", 14, 125);
@@ -332,7 +332,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
       toast.success("Dispatch PDF generated and downloaded successfully!");
 
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      // console.error("Error generating PDF:", error);
       toast.error("Failed to generate dispatch PDF");
     }
   };
@@ -347,7 +347,7 @@ const DispatchScanComponent = ({ dispatchData, onComplete, onBack }) => {
         status: "completed",
       });
     } catch (err) {
-      console.error("Error completing dispatch:", err);
+      // console.error("Error completing dispatch:", err);
       toast.error("Error completing dispatch");
 
       onComplete({

@@ -60,14 +60,9 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
       id: "scanningActivities",
       label: "Scanning Records",
       icon: FileText,
-      roles: ["admin", "scanner", "addProduct"],
+      roles: ["admin", "scanner"],
     },
-    // {
-    //   id: "admin",
-    //   label: "Admin Panel",
-    //   icon: Settings,
-    //   roles: ["admin"],
-    // },
+    
   ];
 
   return (

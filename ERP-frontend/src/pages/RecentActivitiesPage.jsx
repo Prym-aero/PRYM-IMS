@@ -59,7 +59,7 @@ const RecentActivitiesPage = () => {
         toast.error('Failed to fetch activities');
       }
     } catch (error) {
-      console.error('Error fetching activities:', error);
+      // console.error('Error fetching activities:', error);
       toast.error('Error fetching activities');
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ const RecentActivitiesPage = () => {
         setStats(data.stats);
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      // console.error('Error fetching stats:', error);
     }
   };
 

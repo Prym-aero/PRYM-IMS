@@ -84,7 +84,7 @@ const ScanningActivitiesPage = () => {
         setPagination(response.data.data.pagination);
       }
     } catch (error) {
-      console.error('Error fetching activities:', error);
+      // console.error('Error fetching activities:', error);
       toast.error('Failed to fetch scanning activities');
     } finally {
       setLoading(false);
@@ -102,7 +102,7 @@ const ScanningActivitiesPage = () => {
         setOperators(response.data.users);
       }
     } catch (error) {
-      console.error('Error fetching operators:', error);
+      // console.error('Error fetching operators:', error);
     }
   };
 
@@ -117,7 +117,7 @@ const ScanningActivitiesPage = () => {
         setStatistics(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      // console.error('Error fetching statistics:', error);
     }
   };
 
