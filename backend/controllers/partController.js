@@ -10,6 +10,7 @@ exports.AddPart = async (req, res) => {
         const {
             part_name,
             part_number,
+            part_use,
             part_model,
             part_weight,
             part_serial_prefix,
@@ -22,8 +23,14 @@ exports.AddPart = async (req, res) => {
 
         console.log('Received part data:', req.body);
 
-        if (!part_name || !part_number) {
-            return res.status(400).json({ message: "Part info not found" });
+        if (!part_name || !part_number || !part_use) {
+            return res.status(400).json({ message: "Part name, part number, and part use are required" });
+        }
+
+        // Validate part_use enum
+        const validPartUses = ["Arjuna", "Arjuna Advance", "Common"];
+        if (!validPartUses.includes(part_use)) {
+            return res.status(400).json({ message: "Invalid part use. Must be one of: Arjuna, Arjuna Advance, Common" });
         }
 
         const existedPart = await Part.findOne({ part_name });
@@ -34,6 +41,7 @@ exports.AddPart = async (req, res) => {
         const part = new Part({
             part_name,
             part_number,
+            part_use,
             part_model: part_model || '',
             part_weight: part_weight || '',
             part_serial_prefix: part_serial_prefix || '',
@@ -58,6 +66,7 @@ exports.AddPart = async (req, res) => {
             entityName: part_name,
             metadata: {
                 part_number,
+                part_use,
                 category,
                 part_model
             },

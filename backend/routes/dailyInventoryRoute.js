@@ -10,7 +10,7 @@ const {
   closeDailyStock,
   forceReopenDailyStock
 } = require('../controllers/dailyInventoryController');
-const authMiddleware = require('../middleware/authMiddleware');
+const {authMiddleware} = require('../middleware/authMiddleware');
 
 // Get current stock for today
 router.get('/current-stock', authMiddleware, getCurrentStock);

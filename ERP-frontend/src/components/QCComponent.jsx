@@ -27,6 +27,7 @@ const QCComponent = () => {
     part_name: '',
     part_model: '',
     part_number: '',
+    part_use: '',
     part_weight: '',
     part_serial_prefix: '',
     part_description: '',
@@ -242,6 +243,7 @@ const QCComponent = () => {
       part_name: '',
       part_model: '',
       part_number: '',
+      part_use: '',
       part_weight: '',
       part_serial_prefix: '',
       part_description: '',
@@ -269,8 +271,8 @@ const QCComponent = () => {
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.part_name || !formData.part_number) {
-      toast.error('Part name and part number are required');
+    if (!formData.part_name || !formData.part_number || !formData.part_use) {
+      toast.error('Part name, part number, and part use are required');
       return;
     }
 
@@ -588,6 +590,24 @@ const QCComponent = () => {
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       placeholder="Enter part number"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Part Use *
+                    </label>
+                    <select
+                      name="part_use"
+                      value={formData.part_use}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="">Select part use</option>
+                      <option value="Arjuna">Arjuna</option>
+                      <option value="Arjuna Advance">Arjuna Advance</option>
+                      <option value="Common">Common</option>
+                    </select>
                   </div>
 
                   <div>

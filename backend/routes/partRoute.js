@@ -3,7 +3,7 @@ const express = require('express');
 const multer = require("multer");
 const router = express.Router();
 const { AddPart, getParts, addToInventory, dispatchPart, getPartById, getInventoryPartById, uploadDispatchPDF, UploadImage, getScannedQRIds, checkQRIdExists, updatePart, bulkRemoveQRIds, checkPartEditPermission, getValidatedParts } = require('../controllers/partController');
-const authMiddleware = require('../middleware/authMiddleware');
+const {authMiddleware} = require('../middleware/authMiddleware');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });

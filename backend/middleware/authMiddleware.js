@@ -29,4 +29,21 @@ const authMiddleware = async (req, res, next) => {
      }
 };
 
-module.exports = authMiddleware;
+const authKey = (req, res, next) => {
+     try {
+          const apiKey = req.headers['x-api-key'];
+          const secretKey = req.headers['x-secret-key'];
+
+          if (apiKey !== process.env.AUTH_API_KEY || secretKey !== process.env.AUTH_SECRET_KEY) {
+               return res.status(403).json({ message: "Forbidden: Invalid API key or secret key" });
+          }
+
+          next();
+
+     } catch (error) {
+          console.error("Auth key error:", error.message);
+          res.status(500).json({ message: "Internal Server Error" });
+     }
+}
+
+module.exports = { authMiddleware, authKey };
