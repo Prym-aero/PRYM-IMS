@@ -31,6 +31,10 @@ const productSchema = new mongoose.Schema({
                 ref: 'Part',
                 required: true
             },
+            part_name: {
+                type: String,
+                default: "",
+            },
             quantity: {
                 type: Number,
                 required: true,

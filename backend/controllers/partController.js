@@ -1,6 +1,6 @@
 const Part = require('../models/produtPart'); // ✅ Make sure filename is correct
 const QR = require('../models/QR');
-const { uploadToS3, deleteFromS3 } = require("../config/S3");
+const { uploadToS3, deleteFromS3 } = require("../config/S3V3");
 const { incrementPartsAdded, incrementPartsDispatched } = require('./dailyInventoryController');
 const { logActivity } = require('./activityController');
 
