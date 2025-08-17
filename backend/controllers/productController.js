@@ -43,9 +43,9 @@ exports.getProcuts = async (req, res) => {
     try {
         const products = await Product.find();
 
-        if (products.length < 1) {
-            return res.status(404).json({ message: "there are no procuts " });
-        }
+        // if (products.length < 1) {
+        //     return res.status(404).json({ message: "there are no procuts " });
+        // }
 
         res.status(200).json({ message: "products fetch successfully", products });
 
