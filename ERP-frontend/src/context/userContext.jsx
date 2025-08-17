@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
         });
         setUser(res.data);
       } catch (err) {
-        console.error("Failed to fetch user role");
+        // console.error("Failed to fetch user role");
         navigate("/login");
       }
     };
