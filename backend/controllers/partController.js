@@ -162,7 +162,8 @@ exports.addToInventory = async (req, res) => {
             inventoryItem.status = 'in-stock';
             inventoryItem.inwardDate = new Date();
 
-            await part.save();
+            // ✅ Save without triggering part_use validation for existing parts
+            await part.save({ validateBeforeSave: false });
 
             // ✅ Increment daily inventory tracking when part is moved to stock
             await incrementPartsAdded(1);
@@ -218,7 +219,8 @@ exports.addToInventory = async (req, res) => {
             inventoryItem.status = 'used';
             inventoryItem.dispatchDate = new Date();
 
-            await part.save();
+            // ✅ Save without triggering part_use validation for existing parts
+            await part.save({ validateBeforeSave: false });
 
             // ✅ Increment daily inventory tracking when part is dispatched
             await incrementPartsDispatched(1);
@@ -300,7 +302,8 @@ exports.addToInventory = async (req, res) => {
             status: finalStatus,
         });
 
-        await part.save();
+        // ✅ Save without triggering part_use validation for existing parts
+        await part.save({ validateBeforeSave: false });
 
         // ✅ QC Validation: Do NOT increment parts added since they're only "validated", not "in-stock"
         // Parts will be counted when they move to "in-stock" via store inward operation
@@ -362,7 +365,8 @@ exports.dispatchPart = async (req, res) => {
         // Update the status to 'used'
         inventoryItem.status = 'used';
 
-        await part.save();
+        // ✅ Save without triggering part_use validation for existing parts
+        await part.save({ validateBeforeSave: false });
 
         // ✅ Increment daily inventory tracking when part is dispatched
         await incrementPartsDispatched(1);
@@ -650,6 +654,7 @@ exports.updatePart = async (req, res) => {
         const {
             part_name,
             part_number,
+            part_use,
             part_description,
             material,
             weight,
@@ -688,6 +693,7 @@ exports.updatePart = async (req, res) => {
         // Update part fields
         if (part_name !== undefined) part.part_name = part_name;
         if (part_number !== undefined) part.part_number = part_number;
+        if (part_use !== undefined) part.part_use = part_use;
         if (part_description !== undefined) part.part_description = part_description;
         if (material !== undefined) part.material = material;
         if (weight !== undefined) part.weight = weight;

@@ -17,24 +17,15 @@ const socket = io(`${API_URL}`, {
   transports: ["websocket"],
 });
 
-// Add custom styles for animations
+// Add custom styles for animations only
 const styles = `
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes scanLine {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(300px); }
-  }
-
   .animate-fadeIn {
     animation: fadeIn 0.5s ease-out;
-  }
-
-  .animate-scanLine {
-    animation: scanLine 2s ease-in-out infinite;
   }
 `;
 
@@ -185,68 +176,63 @@ const QRScanner = () => {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col items-center p-4">
         {!scanResult && (
-          <div className="relative w-full max-w-md mb-4">
-            <div className="relative bg-black rounded-2xl overflow-hidden border-2 border-blue-400/50 shadow-2xl">
-              <video
-                ref={videoRef}
-                className="w-full h-auto"
-                muted
-                playsInline
-              />
+          <div className="relative w-full max-w-md mx-auto">
+            {/* Original Working Camera Container */}
+            <video
+              ref={videoRef}
+              className="w-full h-auto rounded-lg border-2 border-blue-400"
+              muted
+              playsInline
+            />
 
-              {/* Enhanced Scanning Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  {/* Scanning Frame */}
-                  <div className="w-64 h-64 border-4 border-blue-400 rounded-2xl relative">
-                    {/* Corner Indicators */}
-                    <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-blue-400 rounded-tl-lg"></div>
-                    <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-blue-400 rounded-tr-lg"></div>
-                    <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-blue-400 rounded-bl-lg"></div>
-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-blue-400 rounded-br-lg"></div>
+            {/* Enhanced Scanning Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                {/* Scanning Frame */}
+                <div className="w-64 h-64 border-4 border-blue-400 rounded-lg relative">
+                  {/* Corner Indicators */}
+                  <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-blue-400 rounded-tl-lg"></div>
+                  <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-blue-400 rounded-tr-lg"></div>
+                  <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-blue-400 rounded-bl-lg"></div>
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-blue-400 rounded-br-lg"></div>
 
-                    {/* Scanning Line Animation */}
-                    <div className="absolute inset-0 overflow-hidden rounded-2xl">
-                      <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-pulse"></div>
-                    </div>
+                  {/* Scanning Line Animation */}
+                  <div className="absolute inset-0 overflow-hidden rounded-lg">
+                    <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-pulse"></div>
                   </div>
-
-                  {/* Pulse Effect */}
-                  <div className="absolute inset-0 w-64 h-64 border-2 border-blue-400/30 rounded-2xl animate-ping"></div>
                 </div>
-              </div>
 
-              {/* Status Indicator */}
-              <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-medium">Scanning</span>
-                </div>
+                {/* Pulse Effect */}
+                <div className="absolute inset-0 w-64 h-64 border-2 border-blue-400/30 rounded-lg animate-ping"></div>
               </div>
             </div>
 
-            {/* Instructions */}
-            <div className="mt-4 text-center">
-              <p className="text-blue-200 text-sm">Position QR code within the frame</p>
+            {/* Status Indicator */}
+            <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-sm font-medium">Scanning</span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Enhanced Scan Result */}
+        {/* Dynamic Scan Result - Full Screen */}
         {scanResult && (
-          <div className="w-full max-w-md mb-4 animate-fadeIn">
+          <div className="w-full h-full flex flex-col items-center justify-center px-4 animate-fadeIn">
             {scanResult.error ? (
               /* Error Result */
-              <div className="bg-red-500/10 backdrop-blur-sm rounded-2xl p-6 border border-red-400/30">
+              <div className="bg-red-500/10 backdrop-blur-sm rounded-3xl p-6 border border-red-400/30 w-full max-w-sm">
                 <div className="flex items-center justify-center mb-4">
                   <div className="bg-red-500/20 rounded-full p-3 mr-3">
                     <Package className="h-8 w-8 text-red-400" />
                   </div>
                   <h2 className="text-lg font-bold text-red-400">Scan Error</h2>
                 </div>
-                <div className="text-red-200 text-center mb-6">{scanResult.error}</div>
+                <div className="text-red-200 text-center mb-6 text-sm">{scanResult.error}</div>
                 <button
                   onClick={restartScan}
                   className="w-full bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 transform hover:scale-105"
@@ -257,50 +243,48 @@ const QRScanner = () => {
               </div>
             ) : (
               /* Success Result */
-              <div className="bg-green-500/10 backdrop-blur-sm rounded-2xl p-6 border border-green-400/30">
+              <div className="bg-green-500/10 backdrop-blur-sm rounded-3xl p-6 border border-green-400/30 w-full max-w-sm">
                 {/* Success Header */}
                 <div className="flex items-center justify-center mb-6">
                   <div className="bg-green-500/20 rounded-full p-3 mr-3">
-                    <CheckCircle className="h-10 w-10 text-green-400" />
+                    <CheckCircle className="h-8 w-8 text-green-400" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-green-400">Scan Successful!</h2>
-                    <p className="text-green-200 text-sm">Item details retrieved</p>
+                    <h2 className="text-lg font-bold text-green-400">Success!</h2>
+                    <p className="text-green-200 text-xs">Item scanned</p>
                   </div>
                 </div>
 
-                {/* Item Details */}
-                <div className="space-y-4 mb-6">
-                  <div className="bg-black/20 rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center mb-3">
-                      <Package className="h-5 w-5 text-blue-400 mr-2" />
-                      <span className="text-blue-400 font-medium">Item Information</span>
+                {/* Compact Item Details */}
+                <div className="bg-black/20 rounded-xl p-4 border border-white/10 mb-6">
+                  <div className="flex items-center mb-3">
+                    <Package className="h-4 w-4 text-blue-400 mr-2" />
+                    <span className="text-blue-400 font-medium text-sm">Item Information</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-xs">Part Number</span>
+                      <span className="font-semibold text-white bg-blue-500/20 px-2 py-1 rounded text-xs">
+                        {scanResult.part_number || "N/A"}
+                      </span>
                     </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">Part Number</span>
-                        <span className="font-semibold text-white bg-blue-500/20 px-3 py-1 rounded-lg">
-                          {scanResult.part_number || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">Part Name</span>
-                        <span className="font-medium text-white">
-                          {scanResult.part_name || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">Model</span>
-                        <span className="font-medium text-white">
-                          {scanResult.model_name || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 text-sm">Date</span>
-                        <span className="font-medium text-white">
-                          {scanResult.date || "N/A"}
-                        </span>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-xs">Part Name</span>
+                      <span className="font-medium text-white text-xs text-right max-w-32 truncate">
+                        {scanResult.part_name || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-xs">Model</span>
+                      <span className="font-medium text-white text-xs text-right max-w-32 truncate">
+                        {scanResult.model_name || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-xs">Date</span>
+                      <span className="font-medium text-white text-xs">
+                        {scanResult.date || "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -308,10 +292,10 @@ const QRScanner = () => {
                 {/* Action Button */}
                 <button
                   onClick={restartScan}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-3 transform hover:scale-105 shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 transform hover:scale-105 shadow-lg"
                 >
-                  <Search className="h-5 w-5" />
-                  <span className="font-semibold">Scan Next Item</span>
+                  <Search className="h-4 w-4" />
+                  <span className="font-semibold text-sm">Scan Next Item</span>
                 </button>
               </div>
             )}
