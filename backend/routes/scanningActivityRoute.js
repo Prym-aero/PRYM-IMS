@@ -10,7 +10,7 @@ const {
   cancelSession,
   getScanningStatistics
 } = require('../controllers/scanningActivityController');
-const authMiddleware = require('../middleware/authMiddleware');
+const {authMiddleware} = require('../middleware/authMiddleware');
 
 // All routes require authentication
 router.use(authMiddleware);

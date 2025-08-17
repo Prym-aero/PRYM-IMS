@@ -19,6 +19,7 @@ const dailyInventoryRoutes = require('./routes/dailyInventoryRoute');
 const activityRoutes = require('./routes/activityRoute');
 const scanningActivityRoutes = require('./routes/scanningActivityRoute');
 const dnsJobCardRoutes = require('./routes/dnsJobCardRoute');
+const dmsRoutes = require('./routes/DMSRoutes');
 const { initializeCronJobs } = require('./services/cronJobs');
 
 
@@ -44,6 +45,7 @@ app.use('/api/ERP/daily-inventory', dailyInventoryRoutes);
 app.use('/api/ERP/activities', activityRoutes);
 app.use('/api/ERP/scanning', scanningActivityRoutes);
 app.use('/api/ERP/dns-job-cards', dnsJobCardRoutes);
+app.use('/api', dmsRoutes);
 
 
 

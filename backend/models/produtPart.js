@@ -13,6 +13,11 @@ const productPartSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    part_use: {
+        type: String,
+        enum: ["Arjuna", "Arjuna Advance", "Common"],
+        required: true,
+    },
     inventory: {
         type: [
             {
@@ -34,7 +39,7 @@ const productPartSchema = new mongoose.Schema({
                 },
                 status: {
                     type: String,
-                    enum: ["validated", "in-stock", "used"],
+                    enum: ["validated", "in-stock", "used", "Dispatched"],
                     default: "validated"
                 },
                 date: {

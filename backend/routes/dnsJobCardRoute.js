@@ -10,7 +10,7 @@ const {
   getDnsJobCardStats,
   bulkCreateDnsJobCards
 } = require('../controllers/dnsJobCardController');
-const authMiddleware = require('../middleware/authMiddleware');
+const {authMiddleware} = require('../middleware/authMiddleware');
 
 // All routes require authentication
 router.use(authMiddleware);
