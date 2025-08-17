@@ -75,7 +75,7 @@ exports.loginController = async (req, res) => {
         }
 
         // 3. Generate JWT
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1d" });
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "3d" });
 
         // 4. Return user info and token (you can filter user fields as needed)
         res.json({
