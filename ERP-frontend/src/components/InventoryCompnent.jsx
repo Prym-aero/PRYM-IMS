@@ -414,8 +414,8 @@ const InventoryDispatchSystem = () => {
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
                         <img
                           src={
-                            item?.image && item.image.trim() !== ""
-                              ? item.image
+                            item?.part_image && item.part_image.trim() !== ""
+                              ? item.part_image
                               : "https://images.unsplash.com/photo-1715264687317-545c16c5d1fd?q=80&w=687&auto=format&fit=crop"
                           }
                           onError={(e) => {
