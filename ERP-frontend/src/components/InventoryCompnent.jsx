@@ -18,6 +18,7 @@ import { Toaster, toast } from "react-hot-toast";
 import axios from "axios";
 import DispatchScanComponent from "./DisptachScanComponent";
 import { useNavigate } from "react-router-dom";
+import SearchableSelect from "./SearchableSelect";
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -416,12 +417,12 @@ const InventoryDispatchSystem = () => {
                           src={
                             item?.part_image && item.part_image.trim() !== ""
                               ? item.part_image
-                              : "https://images.unsplash.com/photo-1715264687317-545c16c5d1fd?q=80&w=687&auto=format&fit=crop"
+                              : "/setting2.jpg"
                           }
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src =
-                              "https://images.unsplash.com/photo-1715264687317-545c16c5d1fd?q=80&w=687&auto=format&fit=crop";
+                              "/setting2.jpg";
                           }}
                           className="object-cover w-10 h-10 rounded-lg"
                           alt="part"
@@ -715,21 +716,22 @@ const InventoryDispatchSystem = () => {
                             {/* Product Selection */}
                             {row.selectionType === 'product' && (
                               <div className="space-y-2">
-                                <select
+                                <SearchableSelect
+                                  options={[
+                                    { value: "", label: "Choose a product..." },
+                                    ...products.map(product => ({
+                                      value: product._id,
+                                      label: `${product.product_name} • ${product.parts?.length || 0} parts`
+                                    }))
+                                  ]}
                                   value={row.selectedProduct?._id || ''}
-                                  onChange={(e) => {
-                                    const selectedProduct = products.find(p => p._id === e.target.value);
+                                  onChange={(option) => {
+                                    const selectedProduct = products.find(p => p._id === option?.value);
                                     handleSelectionChange(row.id, 'product', selectedProduct);
                                   }}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-sm"
-                                >
-                                  <option value="">Choose a product...</option>
-                                  {products.map(product => (
-                                    <option key={product._id} value={product._id}>
-                                      {product.product_name} • {product.parts?.length || 0} parts
-                                    </option>
-                                  ))}
-                                </select>
+                                  placeholder="Search and select product..."
+                                  isClearable={true}
+                                />
                                 {row.selectedProduct && (
                                   <button
                                     type="button"

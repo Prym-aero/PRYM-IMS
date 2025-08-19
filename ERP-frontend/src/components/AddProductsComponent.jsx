@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, Toaster } from "react-hot-toast";
+import SearchableSelect from "./SearchableSelect";
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -519,18 +520,19 @@ const AddProductsComponent = () => {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                                                     <div>
                                                         <label className="block text-xs font-medium text-gray-600 mb-1">Part Name</label>
-                                                        <select
-                                                            className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        <SearchableSelect
+                                                            options={[
+                                                                { value: "", label: "-- Select Part --" },
+                                                                ...partsList.map((partItem) => ({
+                                                                    value: partItem.part_name,
+                                                                    label: `${partItem.part_name} (${partItem.part_number})`
+                                                                }))
+                                                            ]}
                                                             value={part.part_name}
-                                                            onChange={(e) => updateProductPart(index, 'part_name', e.target.value)}
-                                                        >
-                                                            <option value="">-- Select Part --</option>
-                                                            {partsList.map((partItem) => (
-                                                                <option key={partItem._id} value={partItem.part_name}>
-                                                                    {partItem.part_name} ({partItem.part_number})
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                            onChange={(option) => updateProductPart(index, 'part_name', option?.value || "")}
+                                                            placeholder="Search and select part..."
+                                                            isClearable={true}
+                                                        />
                                                     </div>
 
                                                     <div>
@@ -623,23 +625,24 @@ const AddProductsComponent = () => {
                                 {/* Product Selection */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Select Product to View</label>
-                                    <select
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    <SearchableSelect
+                                        options={[
+                                            { value: "", label: "-- Select Product --" },
+                                            ...productsList.map((prod) => ({
+                                                value: prod._id,
+                                                label: prod.product_name
+                                            }))
+                                        ]}
                                         value={selectedProductId}
-                                        onChange={(e) => {
-                                            const pid = e.target.value;
+                                        onChange={(option) => {
+                                            const pid = option?.value || "";
                                             setSelectedProductId(pid);
                                             const found = productsList.find((prod) => prod._id === pid);
                                             setSelectedProductData(found);
                                         }}
-                                    >
-                                        <option value="">-- Select Product --</option>
-                                        {productsList.map((prod) => (
-                                            <option key={prod._id} value={prod._id}>
-                                                {prod.product_name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder="Search and select product..."
+                                        isClearable={true}
+                                    />
                                 </div>
 
                                 {/* Selected Product Details */}

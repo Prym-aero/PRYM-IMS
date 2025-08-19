@@ -431,7 +431,7 @@ const SinglePartPage = () => {
             <img
               src={
                 part?.part_image ||
-                "https://images.unsplash.com/photo-1704287254232-8e82061bbbe7?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                "/setting2.jpg"
               }
               alt="part"
               className="w-20 h-20 rounded-lg object-cover"

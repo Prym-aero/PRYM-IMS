@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import SearchableSelect from './SearchableSelect';
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -612,35 +613,53 @@ const QCComponent = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Part Use *
                     </label>
-                    <select
-                      name="part_use"
+                    <SearchableSelect
+                      options={[
+                        { value: "", label: "Select part use" },
+                        { value: "Arjuna", label: "Arjuna" },
+                        { value: "Arjuna Advance", label: "Arjuna Advance" },
+                        { value: "Common", label: "Common" }
+                      ]}
                       value={formData.part_use}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value="">Select part use</option>
-                      <option value="Arjuna">Arjuna</option>
-                      <option value="Arjuna Advance">Arjuna Advance</option>
-                      <option value="Common">Common</option>
-                    </select>
+                      onChange={(option) => {
+                        const event = {
+                          target: {
+                            name: 'part_use',
+                            value: option?.value || ''
+                          }
+                        };
+                        handleInputChange(event);
+                      }}
+                      placeholder="Select part use..."
+                      required={true}
+                      isClearable={false}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Category *
                     </label>
-                    <select
-                      name="category"
+                    <SearchableSelect
+                      options={[
+                        { value: "mechanical", label: "Mechanical" },
+                        { value: "electrical", label: "Electrical" },
+                        { value: "general", label: "General" }
+                      ]}
                       value={formData.category}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value="mechanical">Mechanical</option>
-                      <option value="electrical">Electrical</option>
-                      <option value="general">General</option>
-                    </select>
+                      onChange={(option) => {
+                        const event = {
+                          target: {
+                            name: 'category',
+                            value: option?.value || 'mechanical'
+                          }
+                        };
+                        handleInputChange(event);
+                      }}
+                      placeholder="Select category..."
+                      required={true}
+                      isClearable={false}
+                    />
                   </div>
                 </div>
 
@@ -914,18 +933,19 @@ const QCComponent = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Select Part
                           </label>
-                          <select
+                          <SearchableSelect
+                            options={[
+                              { value: "", label: "Select a part" },
+                              ...parts.map((availablePart) => ({
+                                value: availablePart._id,
+                                label: `${availablePart.part_name} (${availablePart.part_number})`
+                              }))
+                            ]}
                             value={part.part_id}
-                            onChange={(e) => handlePartSelectionChange(index, 'part_id', e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="">Select a part</option>
-                            {parts.map((availablePart) => (
-                              <option key={availablePart._id} value={availablePart._id}>
-                                {availablePart.part_name} ({availablePart.part_number})
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(option) => handlePartSelectionChange(index, 'part_id', option?.value || '')}
+                            placeholder="Search and select part..."
+                            isClearable={true}
+                          />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">

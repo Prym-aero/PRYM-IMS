@@ -22,6 +22,7 @@ import {
 import { io } from "socket.io-client";
 import axios from "axios";
 import { Toaster, toast } from "react-hot-toast";
+import SearchableSelect from "./SearchableSelect";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const ERPQRScanner = () => {
@@ -738,18 +739,20 @@ const ERPQRScanner = () => {
                       <label className="block text-sm text-gray-600 mb-1">
                         Operation Type
                       </label>
-                      <select
+                      <SearchableSelect
+                        options={[
+                          { value: "qc_validation", label: "QC Validation" },
+                          { value: "store_inward", label: "Store Inward" },
+                          { value: "store_outward", label: "Store Outward" }
+                        ]}
                         value={sessionData.operationType}
-                        onChange={(e) => setSessionData(prev => ({
+                        onChange={(option) => setSessionData(prev => ({
                           ...prev,
-                          operationType: e.target.value
+                          operationType: option?.value || "qc_validation"
                         }))}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="qc_validation">QC Validation</option>
-                        <option value="store_inward">Store Inward</option>
-                        <option value="store_outward">Store Outward</option>
-                      </select>
+                        placeholder="Select operation type..."
+                        isClearable={false}
+                      />
                     </div>
 
                     {/* Scanning Mode Toggle */}
@@ -757,14 +760,16 @@ const ERPQRScanner = () => {
                       <label className="block text-sm text-gray-600 mb-1">
                         Scanning Mode
                       </label>
-                      <select
+                      <SearchableSelect
+                        options={[
+                          { value: "part", label: "Individual Parts" },
+                          { value: "product", label: "Whole Product" }
+                        ]}
                         value={scanningMode}
-                        onChange={(e) => handleScanningModeChange(e.target.value)}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="part">Individual Parts</option>
-                        <option value="product">Whole Product</option>
-                      </select>
+                        onChange={(option) => handleScanningModeChange(option?.value || "part")}
+                        placeholder="Select scanning mode..."
+                        isClearable={false}
+                      />
                     </div>
                   </div>
 
@@ -773,52 +778,55 @@ const ERPQRScanner = () => {
                     {scanningMode === "part" ? (
                       <div>
                         <label className="text-sm text-gray-600">Select Part</label>
-                        <select
+                        <SearchableSelect
+                          options={[
+                            { value: "", label: "-- Select a Part --" },
+                            ...partsList.map((part) => ({
+                              value: part._id,
+                              label: `${part.part_name} (${part.part_number})`
+                            }))
+                          ]}
                           value={selectedPartId}
-                          onChange={(e) => handlePartSelection(e.target.value)}
-                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">-- Select a Part --</option>
-                          {partsList.map((part) => (
-                            <option key={part._id} value={part._id}>
-                              {part.part_name} ({part.part_number})
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(option) => handlePartSelection(option?.value || "")}
+                          placeholder="Search and select part..."
+                          isClearable={true}
+                        />
                       </div>
                     ) : (
                       <div>
                         <label className="text-sm text-gray-600">Select Product</label>
-                        <select
+                        <SearchableSelect
+                          options={[
+                            { value: "", label: "-- Select a Product --" },
+                            ...products.map((product) => ({
+                              value: product._id,
+                              label: product.product_name
+                            }))
+                          ]}
                           value={selectedProduct?._id || ""}
-                          onChange={(e) => handleProductSelection(e.target.value)}
-                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">-- Select a Product --</option>
-                          {products.map((product) => (
-                            <option key={product._id} value={product._id}>
-                              {product.product_name}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(option) => handleProductSelection(option?.value || "")}
+                          placeholder="Search and select product..."
+                          isClearable={true}
+                        />
                       </div>
                     )}
 
                     {/* DNS/Job Card Selection */}
                     <div>
                       <label className="text-sm text-gray-600">DNS/Job Card</label>
-                      <select
+                      <SearchableSelect
+                        options={[
+                          { value: "", label: "-- Select DNS/Job Card --" },
+                          ...dnsJobCards.map((card) => ({
+                            value: card.value,
+                            label: card.label
+                          }))
+                        ]}
                         value={sessionData.dnsJobCard}
-                        onChange={(e) => handleDnsJobCardSelection(e.target.value)}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">-- Select DNS/Job Card --</option>
-                        {dnsJobCards.map((card) => (
-                          <option key={card.value} value={card.value}>
-                            {card.label}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(option) => handleDnsJobCardSelection(option?.value || "")}
+                        placeholder="Search and select DNS/Job Card..."
+                        isClearable={true}
+                      />
                     </div>
                   </div>
 
@@ -1375,16 +1383,20 @@ const ERPQRScanner = () => {
                       className="pl-10 pr-4 py-2 border rounded-lg w-64"
                     />
                   </div>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border rounded-lg"
-                  >
-                    <option>All Status</option>
-                    <option>Success</option>
-                    <option>Duplicate</option>
-                    <option>Invalid</option>
-                  </select>
+                  <div className="w-40">
+                    <SearchableSelect
+                      options={[
+                        { value: "All Status", label: "All Status" },
+                        { value: "Success", label: "Success" },
+                        { value: "Duplicate", label: "Duplicate" },
+                        { value: "Invalid", label: "Invalid" }
+                      ]}
+                      value={statusFilter}
+                      onChange={(option) => setStatusFilter(option?.value || "All Status")}
+                      placeholder="Filter by status..."
+                      isClearable={false}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

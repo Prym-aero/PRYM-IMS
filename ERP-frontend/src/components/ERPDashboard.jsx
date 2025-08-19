@@ -24,6 +24,7 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import SearchableSelect from "./SearchableSelect";
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -542,16 +543,20 @@ const ERPMDashboard = () => {
               </h3>
               <div className="flex items-center space-x-4">
                 {/* Category Filter */}
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="mechanical">Mechanical</option>
-                  <option value="electrical">Electrical</option>
-                  <option value="general">General</option>
-                </select>
+                <div className="w-48">
+                  <SearchableSelect
+                    options={[
+                      { value: "all", label: "All Categories" },
+                      { value: "mechanical", label: "Mechanical" },
+                      { value: "electrical", label: "Electrical" },
+                      { value: "general", label: "General" }
+                    ]}
+                    value={selectedCategory}
+                    onChange={(option) => setSelectedCategory(option?.value || "all")}
+                    placeholder="Select category..."
+                    isClearable={false}
+                  />
+                </div>
 
                 {/* Search Input */}
                 <div className="relative">

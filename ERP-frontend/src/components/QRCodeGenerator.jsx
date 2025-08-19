@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import axios from "axios";
 import { Toaster, toast } from "react-hot-toast";
+import SearchableSelect from "./SearchableSelect";
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const QRCodeGenerator = () => {
@@ -400,19 +401,19 @@ const QRCodeGenerator = () => {
               {/* Part Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Part</label>
-                <select
-                  onChange={(e) => setSelectedPartId(e.target.value)}
+                <SearchableSelect
+                  options={[
+                    { value: "", label: "-- Choose a part to generate QR codes --" },
+                    ...(partsList || []).map((part) => ({
+                      value: part._id,
+                      label: `${part.part_name} (${part.part_number})`
+                    }))
+                  ]}
                   value={selectedPartId}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">-- Choose a part to generate QR codes --</option>
-                  {partsList &&
-                    partsList.map((part) => (
-                      <option key={part._id} value={part._id}>
-                        {part.part_name} ({part.part_number})
-                      </option>
-                    ))}
-                </select>
+                  onChange={(option) => setSelectedPartId(option?.value || "")}
+                  placeholder="Search and select part..."
+                  isClearable={true}
+                />
               </div>
 
               {/* Quantity Input */}
