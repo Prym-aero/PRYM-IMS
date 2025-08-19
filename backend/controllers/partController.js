@@ -33,7 +33,7 @@ exports.AddPart = async (req, res) => {
             return res.status(400).json({ message: "Invalid part use. Must be one of: Arjuna, Arjuna Advance, Common" });
         }
 
-        const existedPart = await Part.findOne({ part_name });
+        const existedPart = await Part.findOne({ part_number });
         if (existedPart) {
             return res.status(409).json({ message: "Part is already present in the database" });
         }
