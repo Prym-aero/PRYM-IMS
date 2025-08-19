@@ -36,7 +36,7 @@ const SearchableSelect = ({
       fontSize: window.innerWidth >= 1920 ? '16px' :
                  window.innerWidth >= 1440 ? '15px' :
                  window.innerWidth >= 768 ? '14px' : '13px',
-      padding: window.innerWidth < 768 ? '2px' : '4px',
+      padding: window.innerWidth < 768 ? '2px' : '2px',
     }),
     placeholder: (provided) => ({
       ...provided,
@@ -79,8 +79,8 @@ const SearchableSelect = ({
       fontSize: window.innerWidth >= 1920 ? '16px' :
                  window.innerWidth >= 1440 ? '15px' :
                  window.innerWidth >= 768 ? '14px' : '13px',
-      padding: window.innerWidth >= 1440 ? '14px 18px' :
-               window.innerWidth >= 768 ? '12px 16px' : '10px 14px',
+      padding: window.innerWidth >= 1440 ? '10px 18px' :
+               window.innerWidth >= 768 ? '10px 14px' : '10px 14px',
       '&:hover': {
         backgroundColor: state.isSelected ? '#10b981' : '#f0fdf4',
       },
@@ -96,7 +96,7 @@ const SearchableSelect = ({
       ...provided,
       maxHeight: window.innerWidth >= 1440 ? '250px' :
                  window.innerWidth >= 768 ? '200px' : '180px',
-      padding: '4px',
+      padding: '2px',
     }),
     loadingIndicator: (provided) => ({
       ...provided,
@@ -134,12 +134,12 @@ const SearchableSelect = ({
 
   // Handle value formatting
   const formattedValue = () => {
-    if (!value) return null;
-    
+    if (!value && value !== 0 && value !== '') return null;
+
     if (isMulti) {
       if (Array.isArray(value)) {
         return value.map(v => {
-          if (typeof v === 'string') {
+          if (typeof v === 'string' || typeof v === 'number') {
             return formattedOptions.find(opt => opt.value === v) || { value: v, label: v };
           }
           return v;
@@ -147,8 +147,9 @@ const SearchableSelect = ({
       }
       return [];
     } else {
-      if (typeof value === 'string') {
-        return formattedOptions.find(opt => opt.value === value) || { value, label: value };
+      if (typeof value === 'string' || typeof value === 'number') {
+        const foundOption = formattedOptions.find(opt => opt.value === value);
+        return foundOption || null;
       }
       return value;
     }
@@ -160,8 +161,8 @@ const SearchableSelect = ({
       const values = selectedOption ? selectedOption.map(opt => opt.value) : [];
       onChange(values);
     } else {
-      const selectedValue = selectedOption ? selectedOption.value : '';
-      onChange(selectedValue);
+      // Pass the entire option object to the onChange handler
+      onChange(selectedOption);
     }
   };
 
