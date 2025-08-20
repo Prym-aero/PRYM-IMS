@@ -656,14 +656,15 @@ exports.updatePart = async (req, res) => {
             part_number,
             part_use,
             part_description,
-            material,
-            weight,
-            cadModel,
-            manufacturer,
-            grade,
-            dimensions,
+            part_weight,
+            part_serial_prefix,
+            part_image,
+            category,
+            technical_specifications,
             images
         } = req.body;
+
+
 
         if (!id) {
             return res.status(400).json({ message: "Part ID is required" });
@@ -695,13 +696,13 @@ exports.updatePart = async (req, res) => {
         if (part_number !== undefined) part.part_number = part_number;
         if (part_use !== undefined) part.part_use = part_use;
         if (part_description !== undefined) part.part_description = part_description;
-        if (material !== undefined) part.material = material;
-        if (weight !== undefined) part.weight = weight;
-        if (cadModel !== undefined) part.cadModel = cadModel;
-        if (manufacturer !== undefined) part.manufacturer = manufacturer;
-        if (grade !== undefined) part.grade = grade;
-        if (dimensions !== undefined) part.dimensions = dimensions;
+        if (part_weight !== undefined) part.part_weight = part_weight;
+        if (part_serial_prefix !== undefined) part.part_serial_prefix = part_serial_prefix;
+        if (part_image !== undefined) part.part_image = part_image;
+        if (category !== undefined) part.category = category;
+        if (technical_specifications !== undefined) part.technical_specifications = technical_specifications;
         if (images !== undefined) part.images = images;
+
 
         await part.save();
 

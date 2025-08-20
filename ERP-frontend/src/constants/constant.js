@@ -82,3 +82,19 @@ export const SPECIFICATIONS = [
     "Revenue Streams",
     "Growth Potential",
 ]
+
+
+export const PART_CATEGORY = [
+    "Mechanical",
+    "Electrical",
+    "General",
+];
+
+
+export const PART_USE = [
+    "Arjuna",
+    "Arjuna Advance",
+    "Common",
+];
+
+

@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import SearchableSelect from './SearchableSelect';
+import { PART_USE } from '../constants/constant';
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
@@ -493,8 +494,8 @@ const QCComponent = () => {
                       <h4 className="font-semibold text-gray-800 mb-1">{product.product_name}</h4>
                       <p className="text-sm text-gray-600 mb-2">{product.product_model || 'No model specified'}</p>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.category === 'mechanical' ? 'bg-blue-100 text-blue-800' :
-                          product.category === 'electrical' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                        product.category === 'electrical' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
                         {product.category ? product.category.charAt(0).toUpperCase() + product.category.slice(1) : 'General'}
                       </span>
@@ -616,9 +617,10 @@ const QCComponent = () => {
                     <SearchableSelect
                       options={[
                         { value: "", label: "Select part use" },
-                        { value: "Arjuna", label: "Arjuna" },
-                        { value: "Arjuna Advance", label: "Arjuna Advance" },
-                        { value: "Common", label: "Common" }
+                        // { value: "Arjuna", label: "Arjuna" },
+                        // { value: "Arjuna Advance", label: "Arjuna Advance" },
+                        // { value: "Common", label: "Common" }
+                        ...PART_USE.map((use) => ({ value: use, label: use }))
                       ]}
                       value={formData.part_use}
                       onChange={(option) => {
