@@ -8,7 +8,8 @@ const {
   getReportsRange,
   openDailyStock,
   closeDailyStock,
-  forceReopenDailyStock
+  forceReopenDailyStock,
+  autoTriggerDailyStockAutomation
 } = require('../controllers/dailyInventoryController');
 const {authMiddleware} = require('../middleware/authMiddleware');
 
@@ -31,5 +32,24 @@ router.get('/reports', authMiddleware, getReportsRange);
 router.post('/open-daily-stock', authMiddleware, openDailyStock);
 router.post('/close-daily-stock', authMiddleware, closeDailyStock);
 router.post('/force-reopen-daily-stock', authMiddleware, forceReopenDailyStock);
+
+// Auto-trigger daily stock automation
+router.post('/auto-trigger-automation', authMiddleware, async (req, res) => {
+  try {
+    const result = await autoTriggerDailyStockAutomation();
+    res.status(200).json({
+      success: true,
+      message: 'Daily stock automation triggered successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error triggering automation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error triggering automation',
+      error: error.message
+    });
+  }
+});
 
 module.exports = router;

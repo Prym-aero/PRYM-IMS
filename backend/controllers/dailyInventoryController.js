@@ -39,6 +39,28 @@ const getRealStockData = async () => {
 // Get current stock for today
 exports.getCurrentStock = async (req, res) => {
   try {
+    // ✅ Auto-trigger opening/closing automation when fetching current stock
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Auto-trigger opening if it's 8 AM or later and not opened
+    if (currentHour >= 8) {
+      try {
+        await openDailyStockAutomation();
+      } catch (autoOpenError) {
+        console.log('Auto-open already handled or error:', autoOpenError.message);
+      }
+    }
+
+    // Auto-trigger closing if it's 8 PM or later and not closed
+    if (currentHour >= 20) {
+      try {
+        await closeDailyStockAutomation();
+      } catch (autoCloseError) {
+        console.log('Auto-close already handled or error:', autoCloseError.message);
+      }
+    }
+
     const todayInventory = await DailyInventory.getTodayInventory();
     const realStockData = await getRealStockData();
 
@@ -469,6 +491,37 @@ exports.forceReopenDailyStock = async (req, res) => {
       message: 'Error force reopening daily stock',
       error: error.message
     });
+  }
+};
+
+// ✅ Auto-trigger daily stock automation middleware
+exports.autoTriggerDailyStockAutomation = async () => {
+  try {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Auto-trigger opening if it's 8 AM or later
+    if (currentHour >= 8) {
+      try {
+        await openDailyStockAutomation();
+      } catch (error) {
+        console.log('Auto-open already handled:', error.message);
+      }
+    }
+
+    // Auto-trigger closing if it's 8 PM or later
+    if (currentHour >= 20) {
+      try {
+        await closeDailyStockAutomation();
+      } catch (error) {
+        console.log('Auto-close already handled:', error.message);
+      }
+    }
+
+    return { success: true, message: 'Daily stock automation checked' };
+  } catch (error) {
+    console.error('Error in auto-trigger daily stock automation:', error);
+    return { success: false, error: error.message };
   }
 };
 

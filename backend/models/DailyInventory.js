@@ -77,28 +77,85 @@ dailyInventorySchema.statics.getYesterdayDate = function() {
 // Static method to get or create today's inventory record
 dailyInventorySchema.statics.getTodayInventory = async function() {
   const todayDate = this.getTodayDate();
-  
+
   let todayInventory = await this.findOne({ date: todayDate });
-  
+
   if (!todayInventory) {
     // Get yesterday's closing stock
     const yesterdayDate = this.getYesterdayDate();
     const yesterdayInventory = await this.findOne({ date: yesterdayDate });
-    
-    const openingStock = yesterdayInventory ? yesterdayInventory.closingStock : 0;
-    
+
+    // Get real stock data from parts
+    const Part = require('./produtPart');
+    const parts = await Part.find({});
+    let realInStock = 0;
+
+    parts.forEach(part => {
+      if (part.inventory && part.inventory.length > 0) {
+        part.inventory.forEach(item => {
+          if (item.status === 'in-stock') {
+            realInStock++;
+          }
+        });
+      }
+    });
+
+    // Use real stock or yesterday's closing stock
+    const openingStock = realInStock > 0 ? realInStock : (yesterdayInventory ? yesterdayInventory.closingStock : 0);
+
     todayInventory = new this({
       date: todayDate,
       openingStock: openingStock,
       closingStock: openingStock,
       partsAdded: 0,
       partsDispatched: 0,
-      currentStock: openingStock
+      currentStock: openingStock,
+      isOpened: true, // ✅ Auto-open when creating new record
+      openedAt: new Date()
     });
-    
+
     await todayInventory.save();
+    console.log(`✅ Auto-opened daily stock for ${todayDate} with opening stock: ${openingStock}`);
+  } else if (!todayInventory.isOpened) {
+    // ✅ Auto-open existing record if not already opened
+    const Part = require('./produtPart');
+    const parts = await Part.find({});
+    let realInStock = 0;
+
+    parts.forEach(part => {
+      if (part.inventory && part.inventory.length > 0) {
+        part.inventory.forEach(item => {
+          if (item.status === 'in-stock') {
+            realInStock++;
+          }
+        });
+      }
+    });
+
+    todayInventory.openingStock = realInStock;
+    todayInventory.currentStock = realInStock;
+    todayInventory.closingStock = realInStock;
+    todayInventory.isOpened = true;
+    todayInventory.openedAt = new Date();
+
+    await todayInventory.save();
+    console.log(`✅ Auto-opened existing daily stock for ${todayDate} with opening stock: ${realInStock}`);
   }
-  
+
+  // ✅ Auto-close if it's past 8 PM and not already closed
+  const now = new Date();
+  const currentHour = now.getHours();
+
+  if (currentHour >= 20 && !todayInventory.isClosed) {
+    todayInventory.updateCurrentStock();
+    todayInventory.closingStock = todayInventory.currentStock;
+    todayInventory.isClosed = true;
+    todayInventory.closedAt = new Date();
+
+    await todayInventory.save();
+    console.log(`✅ Auto-closed daily stock for ${todayDate} at ${now.toLocaleTimeString()} with closing stock: ${todayInventory.closingStock}`);
+  }
+
   return todayInventory;
 };
 

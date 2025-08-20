@@ -20,6 +20,24 @@ const initializeCronJobs = () => {
     timezone: "Asia/Kolkata" // Change this to your timezone
   });
 
+  // ✅ Additional opening stock trigger every 30 minutes from 8 AM to 8 PM for reliability
+  cron.schedule('*/30 8-19 * * *', async () => {
+    console.log('🔄 Running backup opening stock check every 30 minutes');
+    try {
+      const result = await openDailyStockAutomation();
+      if (result.message.includes('already opened')) {
+        console.log('✅ Opening stock already handled');
+      } else {
+        console.log('✅ Backup opening stock completed:', result.message);
+      }
+    } catch (error) {
+      console.log('ℹ️ Backup opening stock check (expected if already opened):', error.message);
+    }
+  }, {
+    scheduled: true,
+    timezone: "Asia/Kolkata"
+  });
+
   // Daily closing stock at 8:00 PM (Monday to Sunday)
   // Cron pattern: '0 20 * * *' = At 8:00 PM every day
   cron.schedule('0 20 * * *', async () => {
@@ -33,6 +51,24 @@ const initializeCronJobs = () => {
   }, {
     scheduled: true,
     timezone: "Asia/Kolkata" // Change this to your timezone
+  });
+
+  // ✅ Additional closing stock trigger every 30 minutes from 8 PM to 11:59 PM for reliability
+  cron.schedule('*/30 20-23 * * *', async () => {
+    console.log('🔄 Running backup closing stock check every 30 minutes');
+    try {
+      const result = await closeDailyStockAutomation();
+      if (result.message.includes('already closed')) {
+        console.log('✅ Closing stock already handled');
+      } else {
+        console.log('✅ Backup closing stock completed:', result.message);
+      }
+    } catch (error) {
+      console.log('ℹ️ Backup closing stock check (expected if already closed):', error.message);
+    }
+  }, {
+    scheduled: true,
+    timezone: "Asia/Kolkata"
   });
 
   // Optional: Run opening stock automation every minute for testing

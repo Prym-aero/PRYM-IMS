@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const { autoTriggerDailyStockAutomation } = require('../controllers/dailyInventoryController');
 require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -22,6 +23,15 @@ const authMiddleware = async (req, res, next) => {
           }
 
           req.user = { id: user._id, role: user.role, email: user.email, name: user.name };
+
+          // ✅ Auto-trigger daily stock automation on every authenticated request
+          try {
+               await autoTriggerDailyStockAutomation();
+          } catch (autoTriggerError) {
+               console.log('Auto-trigger daily stock automation error:', autoTriggerError.message);
+               // Don't fail the request if automation fails
+          }
+
           next();
      } catch (err) {
           // console.error("Auth middleware error:", err.message);
