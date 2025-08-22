@@ -10,7 +10,7 @@ const upload = multer({ storage });
 
 
 router.post('/part', authMiddleware, AddPart);
-router.get('/part', authMiddleware, getParts);
+router.get('/part', getParts);
 router.post('/part/:partNumber/inventory', authMiddleware, addToInventory);
 router.get('/part/:id', authMiddleware, getPartById);
 router.put('/part/:id', authMiddleware, updatePart);
