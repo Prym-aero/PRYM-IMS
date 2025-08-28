@@ -77,6 +77,7 @@ exports.getAllPartsForDMS = async (req, res) => {
                 part_description: part.part_description,
                 part_image: part.part_image,
                 part_serial_prefix: part.part_serial_prefix,
+                technical_specifications: part.technical_specifications,  
                 lastSerialNumber: part.lastSerialNumber,
                 inventory: filteredInventory,
             };
