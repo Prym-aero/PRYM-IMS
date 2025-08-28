@@ -42,7 +42,7 @@ exports.getAllPartsForDMS = async (req, res) => {
 
         // Get parts with optional status filtering in inventory
         let parts = await Part.find(filter)
-            .select('part_name part_number part_use category part_description part_image inventory part_image images part_model technical_specifications -_id')
+            .select('part_name part_number part_use category part_description part_image inventory part_image images part_model technical_specifications part_serial_prefix -_id')
             .skip(skip)
             .limit(parseInt(limit))
             .sort({ part_name: 1 });
@@ -70,17 +70,15 @@ exports.getAllPartsForDMS = async (req, res) => {
             };
 
             return {
-                _id: part._id,
                 part_name: part.part_name,
                 part_number: part.part_number,
                 part_use: part.part_use,
                 category: part.category,
                 part_description: part.part_description,
                 part_image: part.part_image,
+                part_serial_prefix: part.part_serial_prefix,
                 lastSerialNumber: part.lastSerialNumber,
                 inventory: filteredInventory,
-                inventoryStats,
-                availableCount: inventoryStats.validated + inventoryStats.inStock
             };
         }).filter(part => part !== null); // Remove null entries from invalid status
 
