@@ -42,7 +42,7 @@ exports.getAllPartsForDMS = async (req, res) => {
 
         // Get parts with optional status filtering in inventory
         let parts = await Part.find(filter)
-            .select('part_name part_number part_use category part_description part_image inventory lastSerialNumber -__v -_id')
+            .select('part_name part_number part_use category part_description part_image inventory -_id')
             .skip(skip)
             .limit(parseInt(limit))
             .sort({ part_name: 1 });
