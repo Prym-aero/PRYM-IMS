@@ -28,6 +28,7 @@ import SearchableSelect from "./SearchableSelect";
 
 const API_URL = import.meta.env.VITE_API_ENDPOINT;
 
+
 const ERPMDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [parts, setParts] = useState([]);
@@ -161,11 +162,11 @@ const ERPMDashboard = () => {
       }
     };
 
-    fetchInventory();
-    fetchProducts();
-    fetchDailyInventory();
-    fetchRecentActivities();
-    fetchValidatedPartsCount();
+    // fetchInventory();
+    // fetchProducts();
+    // fetchDailyInventory();
+    // fetchRecentActivities();
+    // fetchValidatedPartsCount();
   }, []);
 
   // Helper functions for activity display

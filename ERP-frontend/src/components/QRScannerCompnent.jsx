@@ -413,8 +413,8 @@ const ERPQRScanner = () => {
         `${API_URL}/api/ERP/part/${data.part_number}/inventory`,
         {
           id: data.id,
-          part_name: data.part_name,
-          part_number: data.part_number,
+          part_name: sessionData.partName,
+          part_number: sessionData.part_number,
           serialPartNumber: data.serialPartNumber || sessionData.serialPartNumber,
           status: sessionData.operationType === 'qc_validation' ? "validated" : undefined,
           date: data.date,

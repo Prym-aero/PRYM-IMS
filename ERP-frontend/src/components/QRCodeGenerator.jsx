@@ -109,39 +109,8 @@ const QRCodeGenerator = () => {
     setPartForm({ ...partForm, [e.target.name]: e.target.value });
   };
 
-  // 🔘 Add new part to backend
-  // const addNewPart = async () => {
-  //   const { part_name, part_number } = partForm;
-  //   if (!part_name || !part_number) {
-  //     toast("Please fill all part fields.");
-  //     return;
-  //   }
-
-  //   try {
-  //     await axios.post(`${API_URL}/api/ERP/part`, partForm);
-  //     toast.success("Part added successfully!");
-  //     setPartForm({ part_name: "", part_number: "" });
-  //     fetchParts();
-  //   } catch (err) {
-  //     toast.error("Failed to add part.");
-  //   }
-  // };
-
-  // const addNewProduct = async () => {
-  //   try {
-  //     await axios.post(`${API_URL}/api/ERP/product`, productForm);
-  //     toast.success("Product added successfully!");
-  //     setProductForm({
-  //       product_name: "",
-  //       parts: [{ part_name: "", quantity: 1, category: "", categoryName: "" }],
-  //     });
-  //     fetchProducts();
-  //     setIsAddingProduct(false);
-  //   } catch (err) {
-  //     console.error("Product creation failed", err);
-  //     toast.error("Error adding product");
-  //   }
-  // };
+  
+  
 
   // 🔁 Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -171,7 +140,7 @@ const QRCodeGenerator = () => {
 
     try {
       const codes = [];
-      let localCount = count; // snapshot of count
+      let localCount = count || 0; // snapshot of count
 
       for (let i = 1; i <= quantity; i++) {
         localCount++; // increment locally
@@ -179,10 +148,10 @@ const QRCodeGenerator = () => {
 
         const qrDataObj = {
           id,
-          product_name: selectedPart.product_name,
-          part_name: selectedPart.part_name,
-          part_number: selectedPart.part_number,
-          date: selectedPart.date,
+          // product_name: selectedPart.product_name,
+          // part_name: selectedPart.part_name,
+          // part_number: selectedPart.part_number,
+          // date: selectedPart.date,
         };
 
         codes.push({
@@ -197,7 +166,7 @@ const QRCodeGenerator = () => {
 
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_URL}/api/ERP/qr/count`,
+        `${API_URL}/api/inventory/qr/count`,
         {
           count: localCount,
         },
